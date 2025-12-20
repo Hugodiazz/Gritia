@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.*
@@ -86,17 +87,20 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
                 // FAB
                 FloatingActionButton(
-                        onClick = { /* TODO: Add Routine */},
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).size(64.dp),
+                        onClick = { /* TODO */},
                         containerColor = Primary,
-                        contentColor = BackgroundDark,
-                        shape = CircleShape
+                        contentColor = Color.Black,
+                        elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
                 ) {
-                        Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add Routine",
-                                modifier = Modifier.size(32.dp)
-                        )
+                        Row(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                        ) {
+                                Icon(Icons.Default.Edit, contentDescription = null)
+                                Text(text = "Nueva", fontWeight = FontWeight.Bold)
+                        }
                 }
         }
 }

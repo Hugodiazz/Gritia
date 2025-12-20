@@ -19,9 +19,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import com.devdiaz.gritia.ui.home.HomeScreen
 import com.devdiaz.gritia.ui.library.LibraryScreen
 import com.devdiaz.gritia.ui.metrics.BodyMetricsScreen
@@ -31,7 +29,7 @@ import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.TextSecondaryDark
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onNavigateToAddMetric: () -> Unit = {}) {
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
     val items =
@@ -70,7 +68,7 @@ fun MainScreen() {
             when (selectedItem) {
                 0 -> HomeScreen()
                 1 -> LibraryScreen()
-                2 -> BodyMetricsScreen()
+                2 -> BodyMetricsScreen(onNavigateToAddProgress = onNavigateToAddMetric)
                 3 -> ProfileScreen()
             }
         }
@@ -78,4 +76,3 @@ fun MainScreen() {
 }
 
 data class NavigationItem(val label: String, val icon: ImageVector)
-

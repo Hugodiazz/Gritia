@@ -50,13 +50,11 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(), onBackClick: ()
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-            topBar = { TopBar("Perfil") },
-            containerColor = BackgroundDark // Using Dark mode as default for this design
+            containerColor = BackgroundDark
     ) { innerPadding ->
         LazyColumn(
                 modifier =
-                        Modifier.fillMaxSize()
-                                .padding(innerPadding),
+                        Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item { ProfileHeader(uiState) }

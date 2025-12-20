@@ -35,9 +35,9 @@ data class BodyMetricsUiState(
         val recentMeasurements: List<MeasurementItem> =
                 listOf(
                         MeasurementItem(
-                                MetricType.WAIST,
+                                MetricType.WEIGHT,
                                 "82",
-                                "cm",
+                                "kg",
                                 "Oct 30",
                                 "No change",
                                 ChangeType.NEUTRAL
@@ -51,9 +51,9 @@ data class BodyMetricsUiState(
                                 ChangeType.POSITIVE
                         ), // Positive meaning good (green)
                         MeasurementItem(
-                                MetricType.CHEST,
-                                "102",
-                                "cm",
+                                MetricType.IMC,
+                                "90.5",
+                                "",
                                 "Oct 28",
                                 "+1.2 cm gain",
                                 ChangeType.NEGATIVE
@@ -69,11 +69,9 @@ enum class TimeRange(val label: String) {
 }
 
 enum class MetricType(val label: String) {
-    WEIGHT("Weight"),
-    BODY_FAT("Body Fat %"),
-    WAIST("Waist"),
-    CHEST("Chest"),
-    ARMS("Arms")
+    WEIGHT("Peso"),
+    BODY_FAT("% Grasa Corporal"),
+    IMC("IMC"),
 }
 
 data class MeasurementItem(

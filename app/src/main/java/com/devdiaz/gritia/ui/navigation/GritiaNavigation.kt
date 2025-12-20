@@ -19,6 +19,11 @@ fun GritiaNavigation() {
                     }
             )
         }
-        composable("main") { MainScreen() }
+        composable("main") {
+            MainScreen(onNavigateToAddMetric = { navController.navigate("add_metric") })
+        }
+        composable("add_metric") {
+            com.devdiaz.gritia.ui.add.AddScreen(onNavigateBack = { navController.popBackStack() })
+        }
     }
 }

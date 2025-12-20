@@ -8,12 +8,12 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.6.2"
 activityCompose = "1.8.2"
-composeBom = "2024.02.00"
-hilt = "2.50"
-navigationCompose = "2.7.7"
-coil = "2.6.0"
-ksp = "2.0.21-1.0.28"
-
+composeBom = "2024.11.00"
+hilt = "2.51.1"
+navigationCompose = "2.8.5"
+coil = "2.7.0"
+ksp = "2.0.21-1.0.27"
+# foundation = "1.10.0" # Removed to let BOM manage versions
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +36,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 
 
 [plugins]
