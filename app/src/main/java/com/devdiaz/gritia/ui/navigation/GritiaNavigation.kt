@@ -20,10 +20,20 @@ fun GritiaNavigation() {
             )
         }
         composable("main") {
-            MainScreen(onNavigateToAddMetric = { navController.navigate("add_metric") })
+            MainScreen(
+                    onNavigateToAddMetric = { navController.navigate("add_metric") },
+                    onNavigateToWorkout = { navController.navigate("workout_log") },
+                    onNavigateToHistory = { navController.navigate("measurement_history") }
+            )
         }
         composable("add_metric") {
             com.devdiaz.gritia.ui.add.AddScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        composable("workout_log") { com.devdiaz.gritia.ui.workout.WorkoutLogScreen() }
+        composable("measurement_history") {
+            com.devdiaz.gritia.ui.metrics.MeasurementHistoryScreen(
+                    onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

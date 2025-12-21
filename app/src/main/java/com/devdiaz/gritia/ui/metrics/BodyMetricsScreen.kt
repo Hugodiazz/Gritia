@@ -60,13 +60,13 @@ import com.devdiaz.gritia.ui.theme.BackgroundLight
 import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.SurfaceDark
 import com.devdiaz.gritia.ui.theme.SurfaceLight
-import com.devdiaz.gritia.ui.theme.TextDark
 import com.devdiaz.gritia.ui.theme.TextSecondaryDark
 import com.devdiaz.gritia.ui.theme.TextSecondaryLight
 
 @Composable
 fun BodyMetricsScreen(
         onNavigateToAddProgress: () -> Unit,
+        onNavigateToHistory: () -> Unit,
         viewModel: BodyMetricsViewModel = hiltViewModel()
 ) {
         val state by viewModel.uiState.collectAsState()
@@ -108,7 +108,8 @@ fun BodyMetricsScreen(
                                 isDark = isDark,
                                 state = state,
                                 textPrimary = textPrimary,
-                                textSecondary = textSecondary
+                                textSecondary = textSecondary,
+                                onNavigateToHistory = onNavigateToHistory
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
@@ -119,7 +120,8 @@ fun BodyMetricsScreen(
                                 measurements = state.recentMeasurements,
                                 textPrimary = textPrimary,
                                 textSecondary = textSecondary,
-                                surfaceColor = surfaceColor
+                                surfaceColor = surfaceColor,
+                                onNavigateToHistory = onNavigateToHistory
                         )
 
                         Spacer(modifier = Modifier.height(100.dp)) // Padding for bottom/fab
@@ -243,7 +245,8 @@ fun ChartSection(
         isDark: Boolean,
         state: BodyMetricsUiState,
         textPrimary: Color,
-        textSecondary: Color
+        textSecondary: Color,
+        onNavigateToHistory: () -> Unit
 ) {
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Row(
@@ -253,13 +256,20 @@ fun ChartSection(
                 ) {
                         Text(
                                 "Progreso",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                        ),
                                 color = textPrimary,
                         )
                         Text(
                                 "Ver historial",
-                                style = MaterialTheme.typography.labelLarge.copy(color = Primary, fontWeight = FontWeight.Medium),
-                                modifier = Modifier.clickable {}
+                                style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                                color = Primary,
+                                                fontWeight = FontWeight.Medium
+                                        ),
+                                modifier = Modifier.clickable { onNavigateToHistory() }
                         )
                 }
                 Row(
@@ -268,7 +278,6 @@ fun ChartSection(
                         verticalAlignment = Alignment.Bottom
                 ) {
                         Column {
-
                                 Row(verticalAlignment = Alignment.Bottom) {
                                         Text(
                                                 text = state.currentWeight,
@@ -323,14 +332,25 @@ fun ChartSection(
                                 verticalArrangement = Arrangement.SpaceBetween
                         ) {
                                 repeat(5) {
-                                        Box(modifier = Modifier.fillMaxWidth()
-                                                .height(1.dp)
-                                                .background(
-                                                        color = if (isDark) Color(0xFF334155)
-                                                                .copy(
-                                                                        alpha = 0.5f
-                                                                ) else Color(0xFFE2E8F0)
-                                                )
+                                        Box(
+                                                modifier =
+                                                        Modifier.fillMaxWidth()
+                                                                .height(1.dp)
+                                                                .background(
+                                                                        color =
+                                                                                if (isDark)
+                                                                                        Color(
+                                                                                                        0xFF334155
+                                                                                                )
+                                                                                                .copy(
+                                                                                                        alpha =
+                                                                                                                0.5f
+                                                                                                )
+                                                                                else
+                                                                                        Color(
+                                                                                                0xFFE2E8F0
+                                                                                        )
+                                                                )
                                         )
                                 }
                         }
@@ -378,7 +398,10 @@ fun SmoothLineChart(data: List<Float>, lineColor: Color, modifier: Modifier = Mo
                         data.mapIndexed { index, value ->
                                 Offset(
                                         x = index * spacePerPoint,
-                                        y = size.height - ((value - yOffset) / paddedRange * size.height)
+                                        y =
+                                                size.height -
+                                                        ((value - yOffset) / paddedRange *
+                                                                size.height)
                                 )
                         }
 
@@ -485,7 +508,8 @@ fun StatsGrid(
         measurements: List<MeasurementItem>,
         textPrimary: Color,
         textSecondary: Color,
-        surfaceColor: Color
+        surfaceColor: Color,
+        onNavigateToHistory: () -> Unit
 ) {
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Row(
@@ -495,13 +519,20 @@ fun StatsGrid(
                 ) {
                         Text(
                                 "Últimas mediciones",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                        ),
                                 color = textPrimary,
                         )
                         Text(
                                 "Ver historial",
-                                style = MaterialTheme.typography.labelLarge.copy(color = Primary, fontWeight = FontWeight.Medium),
-                                modifier = Modifier.clickable {}
+                                style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                                color = Primary,
+                                                fontWeight = FontWeight.Medium
+                                        ),
+                                modifier = Modifier.clickable { onNavigateToHistory() }
                         )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

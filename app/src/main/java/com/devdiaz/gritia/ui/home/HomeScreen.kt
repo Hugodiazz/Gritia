@@ -1,6 +1,5 @@
 package com.devdiaz.gritia.ui.home
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.FitnessCenter
@@ -38,16 +36,12 @@ import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.SurfaceDark
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), onRoutineClick: () -> Unit = {}) {
         val routines by viewModel.routines.collectAsState()
         val context = LocalContext.current
 
         Box(modifier = Modifier.fillMaxSize().background(BackgroundDark)) {
-                Column(
-                        modifier =
-                                Modifier.fillMaxSize()
-                ) {
-
+                Column(modifier = Modifier.fillMaxSize()) {
                         TopBar("Mis rutinas")
 
                         // Routines List
@@ -56,14 +50,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                                 items(routines) { routine ->
-                                        RoutineCard(routine) {
-                                                Toast.makeText(
-                                                                context,
-                                                                "Clicked ${routine.title}",
-                                                                Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                        }
+                                        RoutineCard(routine) { onRoutineClick() }
                                 }
                         }
                 }

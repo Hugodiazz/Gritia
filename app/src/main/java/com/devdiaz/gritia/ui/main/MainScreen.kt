@@ -29,7 +29,11 @@ import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.TextSecondaryDark
 
 @Composable
-fun MainScreen(onNavigateToAddMetric: () -> Unit = {}) {
+fun MainScreen(
+        onNavigateToAddMetric: () -> Unit = {},
+        onNavigateToWorkout: () -> Unit = {},
+        onNavigateToHistory: () -> Unit = {}
+) {
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
     val items =
@@ -66,9 +70,12 @@ fun MainScreen(onNavigateToAddMetric: () -> Unit = {}) {
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedItem) {
-                0 -> HomeScreen()
+                0 -> HomeScreen(onRoutineClick = onNavigateToWorkout)
                 1 -> LibraryScreen()
-                2 -> BodyMetricsScreen(onNavigateToAddProgress = onNavigateToAddMetric)
+                2 -> BodyMetricsScreen(
+                    onNavigateToAddProgress = onNavigateToAddMetric,
+                    onNavigateToHistory = onNavigateToHistory
+                )
                 3 -> ProfileScreen()
             }
         }
