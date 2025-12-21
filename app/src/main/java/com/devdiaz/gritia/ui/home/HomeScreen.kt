@@ -36,7 +36,11 @@ import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.SurfaceDark
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), onRoutineClick: () -> Unit = {}) {
+fun HomeScreen(
+        viewModel: HomeViewModel = hiltViewModel(),
+        onRoutineClick: () -> Unit = {},
+        onCreateRoutineClick: () -> Unit = {}
+) {
         val routines by viewModel.routines.collectAsState()
         val context = LocalContext.current
 
@@ -74,7 +78,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), onRoutineClick: () ->
 
                 // FAB
                 FloatingActionButton(
-                        onClick = { /* TODO */},
+                        onClick = onCreateRoutineClick,
                         containerColor = Primary,
                         contentColor = Color.Black,
                         elevation = FloatingActionButtonDefaults.elevation(8.dp),

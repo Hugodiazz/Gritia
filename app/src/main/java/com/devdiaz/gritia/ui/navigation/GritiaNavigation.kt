@@ -23,11 +23,47 @@ fun GritiaNavigation() {
             MainScreen(
                     onNavigateToAddMetric = { navController.navigate("add_metric") },
                     onNavigateToWorkout = { navController.navigate("workout_log") },
-                    onNavigateToHistory = { navController.navigate("measurement_history") }
+                    onNavigateToHistory = { navController.navigate("measurement_history") },
+                    onNavigateToCreateRoutine = { navController.navigate("create_routine") }
             )
         }
         composable("add_metric") {
             com.devdiaz.gritia.ui.add.AddScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        composable("create_routine") { backStackEntry ->
+            val savedStateHandle = backStackEntry.savedStateHandle
+            val selectedExercises =
+                    savedStateHandle.get<List<com.devdiaz.gritia.model.Exercise>>(
+                            "selected_exercises"
+                    )
+
+            // Clear the result once retrieved to prevent re-adding on configuration changes if
+            // needed,
+            // though recomposition with same value might be handled in screen.
+            // Better to let the screen consume it via LaunchedEffect key.
+            if (selectedExercises != null) {
+                savedStateHandle.remove<List<com.devdiaz.gritia.model.Exercise>>(
+                        "selected_exercises"
+                )
+            }
+
+            com.devdiaz.gritia.ui.create.CreateRoutineScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToExerciseSelector = { navController.navigate("exercise_selector") },
+                    newExercises = selectedExercises
+            )
+        }
+        composable("exercise_selector") {
+            com.devdiaz.gritia.ui.create.ExerciseSelectorScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onExercisesSelected = { exercises ->
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                                "selected_exercises",
+                                ArrayList(exercises)
+                        )
+                        navController.popBackStack()
+                    }
+            )
         }
         composable("workout_log") { com.devdiaz.gritia.ui.workout.WorkoutLogScreen() }
         composable("measurement_history") {
