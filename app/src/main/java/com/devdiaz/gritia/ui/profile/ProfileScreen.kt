@@ -8,21 +8,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.devdiaz.gritia.ui.library.TopBar
 import com.devdiaz.gritia.ui.theme.BackgroundDark
 import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.SurfaceDark
@@ -60,7 +54,6 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(), onBackClick: ()
             item { ProfileHeader(uiState) }
             item { StatsDashboard(uiState) }
             item { SettingsSection() }
-            item { DataPrivacySection() }
             item { SupportSection() }
             item { DangerZone() }
         }
@@ -153,7 +146,7 @@ fun ProfileHeader(state: ProfileUiState) {
                 modifier = Modifier.height(48.dp).fillMaxWidth(0.6f)
         ) {
             Text(
-                    "Edit Profile Details",
+                    "Editar perfil",
                     style =
                             MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Medium
@@ -179,12 +172,12 @@ fun StatsDashboard(state: ProfileUiState) {
                 verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                    "Overview",
+                    "RESUMEN",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = TextDark
             )
             Text(
-                    "View History",
+                    "Ver historial",
                     style =
                             MaterialTheme.typography.labelLarge.copy(
                                     color = Primary,
@@ -201,18 +194,18 @@ fun StatsDashboard(state: ProfileUiState) {
             // Workouts Card
             StatsCard(
                     modifier = Modifier.weight(1f),
-                    title = "Workouts",
+                    title = "Entrenamientos",
                     value = state.workoutsCount.toString(),
-                    trend = "+${state.workoutsTrend} this week",
+                    trend = "+${state.workoutsTrend} esta semana",
                     icon = Icons.Default.FitnessCenter
             )
             // Volume Card
             StatsCard(
                     modifier = Modifier.weight(1f),
-                    title = "Volume",
+                    title = "Volúmen",
                     value = state.volumeTotal,
                     unit = state.volumeUnit,
-                    trend = "+${state.volumeTrendPercent}% mo.",
+                    trend = "+${state.volumeTrendPercent}% este mes.",
                     icon = Icons.Default.FitnessCenter // Should be weight icon ideally
             )
         }
@@ -233,7 +226,7 @@ fun StatsDashboard(state: ProfileUiState) {
                 ) {
                     Column {
                         Text(
-                                "Weekly Activity",
+                                "Actividad Semanal",
                                 color = TextSecondaryDark,
                                 style =
                                         MaterialTheme.typography.bodySmall.copy(
@@ -249,27 +242,16 @@ fun StatsDashboard(state: ProfileUiState) {
                                         )
                         )
                     }
-                    Surface(color = Primary.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp)) {
-                        Text(
-                                state.activityStatus,
-                                color = Primary,
-                                style =
-                                        MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold
-                                        ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
                 }
 
                 // Bars (Visual Only)
                 Row(
-                        modifier = Modifier.fillMaxWidth().height(100.dp),
+                        modifier = Modifier.fillMaxWidth().height(160.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Bottom
                 ) {
                     val heights = listOf(0.4f, 0.7f, 0.55f, 0.9f, 0.3f, 0.6f, 0.1f)
-                    val days = listOf("M", "T", "W", "T", "F", "S", "S")
+                    val days = listOf("L", "M", "M", "J", "V", "S", "D")
 
                     heights.forEachIndexed { index, h ->
                         Column(
@@ -296,7 +278,6 @@ fun StatsDashboard(state: ProfileUiState) {
                                                         ) // Highlight Thursday
                                 )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                     days[index],
                                     style = MaterialTheme.typography.labelSmall,
@@ -391,40 +372,17 @@ fun StatsCard(
 
 @Composable
 fun SettingsSection() {
-    SectionContainer(title = "Settings") {
+    SectionContainer(title = "CONFIGURACIÓN") {
         SettingsItem(
                 icon = Icons.Default.Settings,
                 iconColor = Color(0xFF3B82F6),
-                title = "App Preferences"
-        )
-        SettingsItem(
-                icon = Icons.Default.Notifications,
-                iconColor = Primary,
-                title = "Notifications",
-                value = "On"
+                title = "Preferencias"
         )
         SettingsItem(
                 icon = Icons.Default.Straighten,
                 iconColor = Color(0xFFA855F7),
-                title = "Units",
-                value = "Metric",
-                isLast = true
-        )
-    }
-}
-
-@Composable
-fun DataPrivacySection() {
-    SectionContainer(title = "Data") {
-        SettingsItem(
-                icon = Icons.Default.Download,
-                iconColor = Color(0xFFF97316),
-                title = "Export Data"
-        )
-        SettingsItem(
-                icon = Icons.Default.Favorite,
-                iconColor = Color(0xFFEF4444),
-                title = "HealthKit Sync",
+                title = "Unidades",
+                value = "Métrico",
                 isLast = true
         )
     }
@@ -434,7 +392,7 @@ fun DataPrivacySection() {
 fun SupportSection() {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
         Text(
-                text = "SUPPORT",
+                text = "AYUDA",
                 style =
                         MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
@@ -448,7 +406,7 @@ fun SupportSection() {
             SupportButton(icon = Icons.Default.Chat, label = "Chat", modifier = Modifier.weight(1f))
             SupportButton(
                     icon = Icons.Default.BugReport,
-                    label = "Report",
+                    label = "Reportar",
                     modifier = Modifier.weight(1f)
             )
         }
@@ -575,14 +533,14 @@ fun DangerZone() {
                         )
         ) {
             Text(
-                    "Log Out",
+                    "Cerrar sesión",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
         TextButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
             Text(
-                    "Delete Account",
+                    "Eliminar cuenta",
                     color = Color(0xFFEF4444),
                     style = MaterialTheme.typography.labelMedium
             )
@@ -590,7 +548,7 @@ fun DangerZone() {
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-                "App Version 2.4.1 (Build 204)",
+                "Version 1.0.0",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 style = MaterialTheme.typography.labelSmall,

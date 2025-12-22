@@ -1,7 +1,6 @@
 package com.devdiaz.gritia.ui.library
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,13 +20,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -45,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.devdiaz.gritia.model.Equipment
 import com.devdiaz.gritia.model.Exercise
 import com.devdiaz.gritia.model.MuscleGroup
 import com.devdiaz.gritia.ui.theme.BackgroundDark
@@ -86,7 +81,7 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
             // All Exercises Header
             item {
                 Text(
-                        text = "All Exercises",
+                        text = "Todos los ejercicios",
                         color = TextDark,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
@@ -122,7 +117,7 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
     TextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text("Search exercises...", color = TextSecondaryDark) },
+            placeholder = { Text("Buscar ejercicio...", color = TextSecondaryDark) },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondaryDark)
             },
@@ -181,17 +176,10 @@ fun PopularExercisesSection(exercises: List<Exercise>) {
                 verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                    text = "Popular Exercises",
+                    text = "Ejercicios populares",
                     color = TextDark,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
-            )
-            Text(
-                    text = "View all",
-                    color = Primary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable {}
             )
         }
         LazyRow(
@@ -215,20 +203,15 @@ fun PopularExerciseCard(exercise: Exercise) {
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
             )
-            Box(
-                    modifier =
-                            Modifier.fillMaxSize()
-                                    .background(
-                                            Brush.verticalGradient(
-                                                    colors =
-                                                            listOf(
-                                                                    Color.Transparent,
-                                                                    Color.Black.copy(alpha = 0.9f)
-                                                            ),
-                                                    startY = 0f,
-                                                    endY = 400f // Approximate
-                                            )
-                                    )
+            Box(modifier = Modifier.fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent,
+                                    Color.Black.copy(alpha = 0.9f)),
+                                startY = 0f,
+                                endY = 400f // Approximate
+                            )
+                        )
             )
             Column(modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
                 Box(
@@ -287,7 +270,7 @@ fun ExerciseListItem(exercise: Exercise) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                         text = exercise.muscleGroup.displayName,
-                        color = TextSecondaryDark,
+                        color = Primary,
                         fontSize = 12.sp
                 )
                 Box(
@@ -303,12 +286,5 @@ fun ExerciseListItem(exercise: Exercise) {
                 )
             }
         }
-        IconButton(
-                onClick = {},
-                modifier =
-                        Modifier.size(40.dp)
-                                .clip(CircleShape)
-                                .background(Primary.copy(alpha = 0.1f))
-        ) { Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = Primary) }
     }
 }

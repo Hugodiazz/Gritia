@@ -92,7 +92,7 @@ fun BodyMetricsScreen(
                                 onRangeSelected = viewModel::onTimeRangeSelected
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // Metric Chips
                         MetricChipsRow(
@@ -120,8 +120,7 @@ fun BodyMetricsScreen(
                                 measurements = state.recentMeasurements,
                                 textPrimary = textPrimary,
                                 textSecondary = textSecondary,
-                                surfaceColor = surfaceColor,
-                                onNavigateToHistory = onNavigateToHistory
+                                surfaceColor = surfaceColor
                         )
 
                         Spacer(modifier = Modifier.height(100.dp)) // Padding for bottom/fab
@@ -158,7 +157,7 @@ fun TimeRangeSelector(
         Row(
                 modifier =
                         Modifier.fillMaxWidth()
-                                .padding(horizontal = 24.dp)
+                                .padding(horizontal = 16.dp)
                                 .background(containerColor, CircleShape)
                                 .padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -205,7 +204,7 @@ fun MetricChipsRow(
         onMetricSelected: (MetricType) -> Unit
 ) {
         LazyRow(
-                contentPadding = PaddingValues(horizontal = 24.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
                 items(MetricType.values()) { metric ->
@@ -248,7 +247,7 @@ fun ChartSection(
         textSecondary: Color,
         onNavigateToHistory: () -> Unit
 ) {
-        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -332,25 +331,13 @@ fun ChartSection(
                                 verticalArrangement = Arrangement.SpaceBetween
                         ) {
                                 repeat(5) {
-                                        Box(
-                                                modifier =
-                                                        Modifier.fillMaxWidth()
-                                                                .height(1.dp)
-                                                                .background(
-                                                                        color =
-                                                                                if (isDark)
-                                                                                        Color(
-                                                                                                        0xFF334155
-                                                                                                )
-                                                                                                .copy(
-                                                                                                        alpha =
-                                                                                                                0.5f
-                                                                                                )
-                                                                                else
-                                                                                        Color(
-                                                                                                0xFFE2E8F0
-                                                                                        )
-                                                                )
+                                        Box(modifier = Modifier.fillMaxWidth()
+                                                .height(1.dp)
+                                                .background(color =
+                                                        if (isDark) Color(0xFF334155)
+                                                                .copy(alpha = 0.5f)
+                                                        else Color(0xFFE2E8F0)
+                                                )
                                         )
                                 }
                         }
@@ -509,9 +496,8 @@ fun StatsGrid(
         textPrimary: Color,
         textSecondary: Color,
         surfaceColor: Color,
-        onNavigateToHistory: () -> Unit
 ) {
-        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Row(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -524,15 +510,6 @@ fun StatsGrid(
                                                 fontWeight = FontWeight.Bold
                                         ),
                                 color = textPrimary,
-                        )
-                        Text(
-                                "Ver historial",
-                                style =
-                                        MaterialTheme.typography.labelLarge.copy(
-                                                color = Primary,
-                                                fontWeight = FontWeight.Medium
-                                        ),
-                                modifier = Modifier.clickable { onNavigateToHistory() }
                         )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

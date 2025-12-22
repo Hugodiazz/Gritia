@@ -222,10 +222,10 @@ data class BodyMetricsUiState(
 )
 
 enum class TimeRange(val label: String) {
-    ONE_WEEK("1W"),
+    ONE_WEEK("1S"),
     ONE_MONTH("1M"),
     THREE_MONTHS("3M"),
-    ONE_YEAR("1Y")
+    ONE_YEAR("1A")
 }
 
 enum class MetricType(val label: String) {
