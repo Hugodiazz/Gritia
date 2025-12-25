@@ -33,12 +33,29 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.devdiaz.gritia.ui.theme.*
 
 @Composable
-fun WorkoutLogScreen(onNavigateBack: () -> Unit, viewModel: WorkoutLogViewModel = hiltViewModel()) {
+fun WorkoutLogScreen(
+        onNavigateBack: () -> Unit,
+        onNavigateToSummary: (String, Long, Float) -> Unit = { _, _, _ -> },
+        viewModel: WorkoutLogViewModel = hiltViewModel()
+) {
         val uiState by viewModel.uiState.collectAsState()
 
         // Handle timer updates (side effect?) - ViewModel logic handles timer internally via
         // coroutines
-        // We just observe uiState.elapsedTimeSeconds
+        // Coroutine Effect for Navigation
+        LaunchedEffect(Unit) {
+                viewModel.navigationEvent.collect { event ->
+                        when (event) {
+                                is WorkoutNavigationEvent.NavigateToSummary -> {
+                                        onNavigateToSummary(
+                                                event.routineName,
+                                                event.durationSeconds,
+                                                event.totalVolume
+                                        )
+                                }
+                        }
+                }
+        }
 
         Box(
                 modifier =
@@ -48,8 +65,11 @@ fun WorkoutLogScreen(onNavigateBack: () -> Unit, viewModel: WorkoutLogViewModel 
         ) {
                 Column(
                         modifier =
-                                Modifier.fillMaxSize()
-                                        .padding(bottom = 100.dp) // Space for floating timer
+                                if (uiState.isRestTimerActive) {
+                                        Modifier.fillMaxSize().padding(bottom = 100.dp)
+                                } else {
+                                        Modifier.fillMaxSize()
+                                }
                 ) {
                         WorkoutHeader(
                                 routineName = uiState.routineName,

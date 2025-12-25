@@ -18,6 +18,7 @@ ktor = "3.0.1"
 credentials = "1.3.0"
 googleid = "1.1.1"
 roomCompiler = "2.8.4"
+foundation = "1.10.0"
 # foundation = "1.10.0" # Removed to let BOM manage versions
 
 [libraries]
@@ -56,6 +57,7 @@ androidx-credentials = { group = "androidx.credentials", name = "credentials", v
 androidx-credentials-play-services = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 
 [plugins]

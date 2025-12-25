@@ -11,11 +11,22 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+sealed class WorkoutNavigationEvent {
+    data class NavigateToSummary(
+            val routineName: String,
+            val durationSeconds: Long,
+            val totalVolume: Float
+    ) : WorkoutNavigationEvent()
+}
 
 @HiltViewModel
 class WorkoutLogViewModel
@@ -30,6 +41,9 @@ constructor(
 
     private val _uiState = MutableStateFlow(WorkoutUiState())
     val uiState: StateFlow<WorkoutUiState> = _uiState.asStateFlow()
+
+    private val _navigationEvent = MutableSharedFlow<WorkoutNavigationEvent>()
+    val navigationEvent: SharedFlow<WorkoutNavigationEvent> = _navigationEvent.asSharedFlow()
 
     private var workoutTimerJob: Job? = null
     private var restTimerJob: Job? = null
@@ -98,7 +112,31 @@ constructor(
     private fun finishWorkout() {
         stopWorkoutTimer()
         saveWorkout()
-        _uiState.update { it.copy(isWorkoutActive = false) } // Ideally navigate away
+        val totalVolume = calculateTotalVolume()
+        viewModelScope.launch {
+            _navigationEvent.emit(
+                    WorkoutNavigationEvent.NavigateToSummary(
+                            routineName = _uiState.value.routineName,
+                            durationSeconds = _uiState.value.elapsedTimeSeconds,
+                            totalVolume = totalVolume
+                    )
+            )
+        }
+        _uiState.update { it.copy(isWorkoutActive = false) }
+    }
+
+    private fun calculateTotalVolume(): Float {
+        var volume = 0f
+        _uiState.value.exercises.forEach { exercise ->
+            exercise.sets.forEach { set ->
+                if (set.isCompleted) {
+                    val weight = set.actualWeight.toFloatOrNull() ?: 0f
+                    val reps = set.actualReps.toIntOrNull() ?: 0
+                    volume += weight * reps
+                }
+            }
+        }
+        return volume
     }
 
     private fun startWorkoutTimer() {
