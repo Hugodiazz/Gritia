@@ -7,6 +7,10 @@ import com.devdiaz.gritia.model.entities.RoutineExerciseEntity
 
 data class RoutineWithExercises(
         @Embedded val routine: RoutineEntity,
-        @Relation(parentColumn = "id", entityColumn = "routine_id")
-        val exercises: List<RoutineExerciseEntity>
+        @Relation(
+                parentColumn = "id",
+                entityColumn = "routine_id",
+                entity = RoutineExerciseEntity::class
+        )
+        val exercises: List<RoutineExerciseWithDetails>
 )

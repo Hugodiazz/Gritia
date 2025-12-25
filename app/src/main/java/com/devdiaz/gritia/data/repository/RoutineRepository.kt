@@ -14,7 +14,9 @@ import kotlinx.coroutines.withContext
 
 interface RoutineRepository {
     fun getRoutines(userId: Long): Flow<List<Routine>>
+    fun getRoutine(routineId: Long): Flow<Routine>
     suspend fun addRoutine(userId: Long, routine: Routine)
+    suspend fun updateRestTime(routineId: Long, exerciseId: Long, seconds: Int)
 }
 
 class RoutineRepositoryImpl
@@ -26,9 +28,74 @@ constructor(
 
     override fun getRoutines(userId: Long): Flow<List<Routine>> =
             routineDao.getRoutines(userId).map { list ->
-                list.map {
-                    it.routine.toDomain()
-                } // Note: Currently ignoring exercises in Domain model mapper? Need to check.
+                list.map { routineWithExercises ->
+                    val domainRoutine = routineWithExercises.routine.toDomain()
+                    val domainExercises =
+                            routineWithExercises.exercises.map { details ->
+                                com.devdiaz.gritia.model.RoutineExercise(
+                                        exerciseId = details.exercise.id,
+                                        name = details.exercise.name,
+                                        sets = details.routineExercise.targetSets,
+                                        reps = details.routineExercise.targetReps,
+                                        weight = details.routineExercise.targetWeight,
+                                        muscleGroup = details.exercise.primaryMuscleGroup,
+                                        restTimeSeconds = details.routineExercise.restTimeSeconds
+                                )
+                            }
+
+                    val muscleGroups =
+                            routineWithExercises
+                                    .exercises
+                                    .mapNotNull {
+                                        try {
+                                            com.devdiaz.gritia.model.MuscleGroup.valueOf(
+                                                            it.exercise.primaryMuscleGroup
+                                                                    .uppercase()
+                                                    )
+                                                    .displayName
+                                        } catch (e: Exception) {
+                                            null
+                                        }
+                                    }
+                                    .distinct()
+                                    .joinToString(" • ")
+
+                    domainRoutine.copy(exercises = domainExercises, muscles = muscleGroups)
+                }
+            }
+
+    override fun getRoutine(routineId: Long): Flow<Routine> =
+            routineDao.getRoutine(routineId).map { routineWithExercises ->
+                val domainRoutine = routineWithExercises.routine.toDomain()
+                val domainExercises =
+                        routineWithExercises.exercises.map { details ->
+                            com.devdiaz.gritia.model.RoutineExercise(
+                                    exerciseId = details.exercise.id,
+                                    name = details.exercise.name,
+                                    sets = details.routineExercise.targetSets,
+                                    reps = details.routineExercise.targetReps,
+                                    weight = details.routineExercise.targetWeight,
+                                    restTimeSeconds = details.routineExercise.restTimeSeconds
+                            )
+                        }
+
+                val muscleGroups =
+                        routineWithExercises
+                                .exercises
+                                .mapNotNull {
+                                    try {
+                                        com.devdiaz.gritia.model.MuscleGroup.valueOf(
+                                                        it.exercise.primaryMuscleGroup.uppercase()
+                                                )
+                                                .displayName
+                                    } catch (e: Exception) {
+                                        null
+                                    }
+                                }
+                                .distinct()
+                                .joinToString(" • ")
+
+                domainRoutine.copy(exercises = domainExercises, muscles = muscleGroups)
             }
 
     override suspend fun addRoutine(userId: Long, routine: Routine) =
@@ -52,4 +119,7 @@ constructor(
                 }
                 Unit
             }
+
+    override suspend fun updateRestTime(routineId: Long, exerciseId: Long, seconds: Int) =
+            withContext(ioDispatcher) { routineDao.updateRestTime(routineId, exerciseId, seconds) }
 }

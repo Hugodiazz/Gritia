@@ -11,20 +11,30 @@ import com.devdiaz.gritia.model.relations.WorkoutLogWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface WorkoutDao {
+abstract class WorkoutDao {
     @Query("SELECT * FROM workout_logs WHERE user_id = :userId ORDER BY start_time DESC")
-    fun getWorkoutLogs(userId: Long): Flow<List<WorkoutLogEntity>>
+    abstract fun getWorkoutLogs(userId: Long): Flow<List<WorkoutLogEntity>>
 
     @Transaction
     @Query("SELECT * FROM workout_logs WHERE id = :logId")
-    fun getWorkoutDetails(logId: Long): Flow<WorkoutLogWithDetails>
+    abstract fun getWorkoutDetails(logId: Long): Flow<WorkoutLogWithDetails>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertWorkoutLog(workoutLog: WorkoutLogEntity): Long
+    abstract suspend fun insertWorkoutLog(workoutLog: WorkoutLogEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPerformanceLog(performanceLog: ExercisePerformanceLogEntity)
+    abstract suspend fun insertPerformanceLog(performanceLog: ExercisePerformanceLogEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPerformanceLogs(performanceLogs: List<ExercisePerformanceLogEntity>)
+    abstract suspend fun insertPerformanceLogs(performanceLogs: List<ExercisePerformanceLogEntity>)
+
+    @Transaction
+    open suspend fun insertCompleteWorkout(
+            workoutLog: WorkoutLogEntity,
+            exercises: List<ExercisePerformanceLogEntity>
+    ) {
+        val logId = insertWorkoutLog(workoutLog)
+        val exercisesWithId = exercises.map { it.copy(workoutLogId = logId) }
+        insertPerformanceLogs(exercisesWithId)
+    }
 }

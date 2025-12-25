@@ -22,7 +22,9 @@ fun GritiaNavigation() {
         composable("main") {
             MainScreen(
                     onNavigateToAddMetric = { navController.navigate("add_metric") },
-                    onNavigateToWorkout = { navController.navigate("workout_log") },
+                    onNavigateToWorkout = { routineId ->
+                        navController.navigate("workout_log/$routineId")
+                    },
                     onNavigateToHistory = { navController.navigate("measurement_history") },
                     onNavigateToCreateRoutine = { navController.navigate("create_routine") }
             )
@@ -65,7 +67,19 @@ fun GritiaNavigation() {
                     }
             )
         }
-        composable("workout_log") { com.devdiaz.gritia.ui.workout.WorkoutLogScreen() }
+        composable(
+                "workout_log/{routineId}",
+                arguments =
+                        listOf(
+                                androidx.navigation.navArgument("routineId") {
+                                    type = androidx.navigation.NavType.LongType
+                                }
+                        )
+        ) {
+            com.devdiaz.gritia.ui.workout.WorkoutLogScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
         composable("measurement_history") {
             com.devdiaz.gritia.ui.metrics.MeasurementHistoryScreen(
                     onNavigateBack = { navController.popBackStack() }

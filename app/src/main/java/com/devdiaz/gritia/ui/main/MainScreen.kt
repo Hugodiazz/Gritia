@@ -31,61 +31,72 @@ import com.devdiaz.gritia.ui.theme.TextSecondaryDark
 @Composable
 fun MainScreen(
         onNavigateToAddMetric: () -> Unit = {},
-        onNavigateToWorkout: () -> Unit = {},
+        onNavigateToWorkout: (Long) -> Unit = {},
         onNavigateToHistory: () -> Unit = {},
         onNavigateToCreateRoutine: () -> Unit = {}
 ) {
-    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
+        var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
-    val items =
-            listOf(
-                    NavigationItem("Rutinas", Icons.Default.Home),
-                    NavigationItem("Ejercicios", Icons.Default.FitnessCenter),
-                    NavigationItem("Progreso", Icons.Default.BarChart),
-                    NavigationItem("Perfil", Icons.Default.Person)
-            )
+        val items =
+                listOf(
+                        NavigationItem("Rutinas", Icons.Default.Home),
+                        NavigationItem("Ejercicios", Icons.Default.FitnessCenter),
+                        NavigationItem("Progreso", Icons.Default.BarChart),
+                        NavigationItem("Perfil", Icons.Default.Person)
+                )
 
-    Scaffold(
-            bottomBar = {
-                NavigationBar(containerColor = BackgroundDark, contentColor = TextSecondaryDark) {
-                    items.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                                icon = { Icon(item.icon, contentDescription = item.label) },
-                                label = { Text(item.label) },
-                                selected = selectedItem == index,
-                                onClick = { selectedItem = index },
-                                colors =
-                                        NavigationBarItemDefaults.colors(
-                                                selectedIconColor = Primary,
-                                                selectedTextColor = Primary,
-                                                indicatorColor =
-                                                        BackgroundDark, // No pill background or
-                                                // same as container
-                                                unselectedIconColor = TextSecondaryDark,
-                                                unselectedTextColor = TextSecondaryDark
+        Scaffold(
+                bottomBar = {
+                        NavigationBar(
+                                containerColor = BackgroundDark,
+                                contentColor = TextSecondaryDark
+                        ) {
+                                items.forEachIndexed { index, item ->
+                                        NavigationBarItem(
+                                                icon = {
+                                                        Icon(
+                                                                item.icon,
+                                                                contentDescription = item.label
+                                                        )
+                                                },
+                                                label = { Text(item.label) },
+                                                selected = selectedItem == index,
+                                                onClick = { selectedItem = index },
+                                                colors =
+                                                        NavigationBarItemDefaults.colors(
+                                                                selectedIconColor = Primary,
+                                                                selectedTextColor = Primary,
+                                                                indicatorColor =
+                                                                        BackgroundDark, // No pill
+                                                                // background or
+                                                                // same as container
+                                                                unselectedIconColor =
+                                                                        TextSecondaryDark,
+                                                                unselectedTextColor =
+                                                                        TextSecondaryDark
+                                                        )
                                         )
-                        )
-                    }
+                                }
+                        }
                 }
-            }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when (selectedItem) {
-                0 ->
-                        HomeScreen(
-                                onRoutineClick = onNavigateToWorkout,
-                                onCreateRoutineClick = onNavigateToCreateRoutine
-                        )
-                1 -> LibraryScreen()
-                2 ->
-                        BodyMetricsScreen(
-                                onNavigateToAddProgress = onNavigateToAddMetric,
-                                onNavigateToHistory = onNavigateToHistory
-                        )
-                3 -> ProfileScreen()
-            }
+        ) { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
+                        when (selectedItem) {
+                                0 ->
+                                        HomeScreen(
+                                                onRoutineClick = onNavigateToWorkout,
+                                                onCreateRoutineClick = onNavigateToCreateRoutine
+                                        )
+                                1 -> LibraryScreen()
+                                2 ->
+                                        BodyMetricsScreen(
+                                                onNavigateToAddProgress = onNavigateToAddMetric,
+                                                onNavigateToHistory = onNavigateToHistory
+                                        )
+                                3 -> ProfileScreen()
+                        }
+                }
         }
-    }
 }
 
 data class NavigationItem(val label: String, val icon: ImageVector)

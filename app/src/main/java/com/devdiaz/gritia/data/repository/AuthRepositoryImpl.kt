@@ -2,9 +2,9 @@ package com.devdiaz.gritia.data.repository
 
 import com.devdiaz.gritia.data.repository.SessionStatus.*
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.IDToken
+import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,7 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @Singleton
-class AuthRepositoryImpl @Inject constructor(private val auth: Auth) : AuthRepository {
+class AuthRepositoryImpl
+@Inject
+constructor(private val auth: Auth, private val userRepository: UserRepository) : AuthRepository {
 
     private val _sessionStatus = MutableStateFlow<SessionStatus>(SessionStatus.Loading)
     override val sessionStatus: StateFlow<SessionStatus> = _sessionStatus.asStateFlow()
@@ -34,8 +36,27 @@ class AuthRepositoryImpl @Inject constructor(private val auth: Auth) : AuthRepos
             auth.sessionStatus.collect { status ->
                 when (status) {
                     is SupabaseSessionStatus.Authenticated -> {
-                        auth.currentUserOrNull()?.let {
-                            _sessionStatus.value = Authenticated(it)
+                        auth.currentUserOrNull()?.let { userInfo ->
+                            _sessionStatus.value = Authenticated(userInfo)
+
+                            // Sync user to local database
+                            userInfo.email?.let { email ->
+                                val localUser = userRepository.getUserByEmail(email)
+                                if (localUser == null) {
+                                    val newUser =
+                                            com.devdiaz.gritia.model.User(
+                                                    id = 0,
+                                                    name = userInfo.userMetadata?.get("name") as? String
+                                                                    ?: "Usuario",
+                                                    email = email,
+                                                    gender = com.devdiaz.gritia.model.Gender.OTHER,
+                                                    birthDate = null,
+                                                    height = null,
+                                                    currentWeight = null
+                                            )
+                                    userRepository.saveUser(newUser)
+                                }
+                            }
                         }
                     }
                     is SupabaseSessionStatus.NotAuthenticated -> {
@@ -44,11 +65,12 @@ class AuthRepositoryImpl @Inject constructor(private val auth: Auth) : AuthRepos
                     is SupabaseSessionStatus.Initializing -> {
                         _sessionStatus.value = SessionStatus.Loading
                     }
-//                    is SupabaseSessionStatus.NetworkError -> {
-//                        // Keep previous state or show error? For now, ignore network error in
-//                        // status flow
-//                        // usually it means we couldn't refresh token
-//                    }
+                    //                    is SupabaseSessionStatus.NetworkError -> {
+                    //                        // Keep previous state or show error? For now, ignore
+                    // network error in
+                    //                        // status flow
+                    //                        // usually it means we couldn't refresh token
+                    //                    }
                     is SupabaseSessionStatus.RefreshFailure -> TODO()
                 }
             }

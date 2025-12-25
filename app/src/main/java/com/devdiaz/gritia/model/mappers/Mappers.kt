@@ -87,6 +87,7 @@ fun Exercise.toEntity(): ExerciseEntity {
 // Routine Mappers
 fun RoutineEntity.toDomain(): Routine {
     return Routine(
+            id = this.id,
             title = this.name,
             muscles = "", // Logic needed to derive from exercises? Or just empty/placeholder
             schedule = listOf(monday, tuesday, wednesday, thursday, friday, saturday, sunday),
@@ -97,6 +98,7 @@ fun RoutineEntity.toDomain(): Routine {
 fun Routine.toEntity(userId: Long): RoutineEntity {
     val days = this.schedule
     return RoutineEntity(
+            id = this.id,
             userId = userId,
             name = this.title,
             monday = days.getOrElse(0) { false },

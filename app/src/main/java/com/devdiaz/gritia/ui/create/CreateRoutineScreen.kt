@@ -2,6 +2,7 @@ package com.devdiaz.gritia.ui.create
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -13,7 +14,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.PlaylistAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,21 +35,6 @@ import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.SurfaceDark
 
 // Temporary data models for UI state
-data class RoutineExerciseState(
-        val id: String,
-        val name: String,
-        val muscle: String,
-        val equipment: String,
-        val sets: MutableList<RoutineSetState>
-)
-
-data class RoutineSetState(
-        val id: String,
-        val setNumber: Int,
-        var kg: String = "",
-        var reps: String = ""
-)
-
 @Composable
 fun CreateRoutineScreen(
         onNavigateBack: () -> Unit,
@@ -57,49 +42,13 @@ fun CreateRoutineScreen(
         newExercises: List<Exercise>? = null,
         viewModel: CreateRoutineViewModel = hiltViewModel()
 ) {
-        // UI State
-        var routineName by remember { mutableStateOf("") }
-
-        // Dummy initial state matching the design
-        val exercises = remember {
-                mutableStateListOf(
-                        RoutineExerciseState(
-                                id = "1",
-                                name = "Barbell Bench Press",
-                                muscle = "Chest",
-                                equipment = "Barbell",
-                                sets =
-                                        mutableListOf(
-                                                RoutineSetState("1", 1, "60", "10"),
-                                                RoutineSetState("2", 2, "60", "10"),
-                                                RoutineSetState("3", 3, "", "")
-                                        )
-                        ),
-                        RoutineExerciseState(
-                                id = "2",
-                                name = "Incline Dumbbell Fly",
-                                muscle = "Chest",
-                                equipment = "Dumbbell",
-                                sets = mutableListOf(RoutineSetState("1", 1, "18", "12"))
-                        )
-                )
-        }
+        // UI State from ViewModel
+        val uiState by viewModel.uiState.collectAsState()
 
         // Handle new exercises from selector
         LaunchedEffect(newExercises) {
-                newExercises?.forEach { newExercise ->
-                        // Prevent duplicates if needed, or allow multiple entries
-                        // Here we assume allowing multiple
-                        // Mock converting Exercise to RoutineExerciseState
-                        exercises.add(
-                                RoutineExerciseState(
-                                        id = java.util.UUID.randomUUID().toString(),
-                                        name = newExercise.name,
-                                        muscle = newExercise.muscleGroup.displayName,
-                                        equipment = newExercise.equipment.displayName,
-                                        sets = mutableListOf(RoutineSetState("1", 1, "", ""))
-                                )
-                        )
+                if (!newExercises.isNullOrEmpty()) {
+                        viewModel.addExercises(newExercises)
                 }
         }
 
@@ -109,10 +58,19 @@ fun CreateRoutineScreen(
                         CreateRoutineTopBar(
                                 onBack = onNavigateBack,
                                 onSave = {
-                                        if (routineName.isNotBlank() && exercises.isNotEmpty()) {
-                                                viewModel.saveRoutine(routineName, exercises) {
-                                                        onNavigateBack()
+                                        // Validation
+                                        val isNameValid = uiState.routineName.isNotBlank()
+                                        val isExercisesValid = uiState.exercises.isNotEmpty()
+                                        val areSetsValid =
+                                                uiState.exercises.all { exercise ->
+                                                        exercise.sets.all { set ->
+                                                                set.kg.isNotBlank() &&
+                                                                        set.reps.isNotBlank()
+                                                        }
                                                 }
+
+                                        if (isNameValid && isExercisesValid && areSetsValid) {
+                                                viewModel.saveRoutine { onNavigateBack() }
                                         }
                                 }
                         )
@@ -181,8 +139,8 @@ fun CreateRoutineScreen(
                         item {
                                 Box(modifier = Modifier.padding(16.dp)) {
                                         BasicTextField(
-                                                value = routineName,
-                                                onValueChange = { routineName = it },
+                                                value = uiState.routineName,
+                                                onValueChange = { viewModel.setRoutineName(it) },
                                                 textStyle =
                                                         TextStyle(
                                                                 color = Color.White,
@@ -202,7 +160,7 @@ fun CreateRoutineScreen(
                                                                 contentAlignment =
                                                                         Alignment.CenterStart
                                                         ) {
-                                                                if (routineName.isEmpty()) {
+                                                                if (uiState.routineName.isEmpty()) {
                                                                         Text(
                                                                                 "Routine Name e.g. Leg Day A",
                                                                                 color =
@@ -212,7 +170,7 @@ fun CreateRoutineScreen(
                                                                                                 .copy(
                                                                                                         alpha =
                                                                                                                 0.5f
-                                                                                                ), // text-secondary
+                                                                                                ),
                                                                                 fontSize = 20.sp,
                                                                                 fontWeight =
                                                                                         FontWeight
@@ -224,6 +182,28 @@ fun CreateRoutineScreen(
                                                 },
                                                 cursorBrush = SolidColor(Primary)
                                         )
+                                }
+                        }
+
+                        // Day Selector
+                        item {
+                                Row(
+                                        modifier =
+                                                Modifier.fillMaxWidth()
+                                                        .padding(
+                                                                horizontal = 16.dp,
+                                                                vertical = 8.dp
+                                                        ),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                        val days = listOf("M", "T", "W", "T", "F", "S", "S")
+                                        days.forEachIndexed { index, day ->
+                                                DaySelectorItem(
+                                                        text = day,
+                                                        selected = uiState.schedule[index],
+                                                        onClick = { viewModel.toggleDay(index) }
+                                                )
+                                        }
                                 }
                         }
 
@@ -246,7 +226,7 @@ fun CreateRoutineScreen(
                                                 fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                                "${exercises.size} exercises",
+                                                "${uiState.exercises.size} exercises",
                                                 color = Color(0xFF9db8a8),
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium
@@ -254,31 +234,18 @@ fun CreateRoutineScreen(
                                 }
                         }
 
-                        itemsIndexed(exercises) { index, exercise ->
+                        itemsIndexed(uiState.exercises) { index, exercise ->
                                 RoutineExerciseCard(
                                         exercise = exercise,
-                                        onAddSet = {
-                                                // Simplified logic for UI demo
-                                                val newSetNumber = exercise.sets.size + 1
-                                                exercise.sets.add(
-                                                        RoutineSetState(
-                                                                newSetNumber.toString(),
-                                                                newSetNumber
-                                                        )
-                                                )
-                                        },
+                                        onAddSet = { viewModel.addSet(exercise.id) },
                                         onDeleteSet = { setIndex ->
-                                                if (setIndex in exercise.sets.indices) {
-                                                        exercise.sets.removeAt(setIndex)
-                                                        // Reorder set numbers
-                                                        exercise.sets.forEachIndexed { i, s ->
-                                                                // Ideally we shouldn't mutate state
-                                                                // like this directly in a
-                                                                // real app without ViewModel
-                                                                // But safe enough for this UI demo
-                                                                // structure
-                                                        }
-                                                }
+                                                viewModel.removeSet(exercise.id, setIndex)
+                                        },
+                                        onRemoveExercise = {
+                                                viewModel.removeExercise(exercise.id)
+                                        },
+                                        onUpdateSet = { setIndex, kg, reps ->
+                                                viewModel.updateSet(exercise.id, setIndex, kg, reps)
                                         }
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -351,7 +318,9 @@ fun CreateRoutineTopBar(onBack: () -> Unit, onSave: () -> Unit) {
 fun RoutineExerciseCard(
         exercise: RoutineExerciseState,
         onAddSet: () -> Unit,
-        onDeleteSet: (Int) -> Unit
+        onDeleteSet: (Int) -> Unit,
+        onRemoveExercise: () -> Unit,
+        onUpdateSet: (Int, String?, String?) -> Unit
 ) {
         Column(
                 modifier =
@@ -402,13 +371,10 @@ fun RoutineExerciseCard(
                                         )
                                 }
                         }
-                        IconButton(
-                                onClick = { /* Check design for action */},
-                                modifier = Modifier.size(32.dp)
-                        ) {
+                        IconButton(onClick = onRemoveExercise, modifier = Modifier.size(32.dp)) {
                                 Icon(
-                                        Icons.Default.MoreVert,
-                                        contentDescription = "Options",
+                                        Icons.Default.Delete,
+                                        contentDescription = "Remove Exercise",
                                         tint = Color(0xFF9db8a8)
                                 )
                         }
@@ -483,7 +449,7 @@ fun RoutineExerciseCard(
                                 // Kg Input
                                 SetInput(
                                         value = set.kg,
-                                        onValueChange = { set.kg = it },
+                                        onValueChange = { onUpdateSet(index, it, null) },
                                         modifier = Modifier.weight(1f)
                                 )
 
@@ -492,7 +458,7 @@ fun RoutineExerciseCard(
                                 // Reps Input
                                 SetInput(
                                         value = set.reps,
-                                        onValueChange = { set.reps = it },
+                                        onValueChange = { onUpdateSet(index, null, it) },
                                         modifier = Modifier.weight(1f)
                                 )
 
@@ -578,3 +544,31 @@ fun Modifier.shadow(
         ambientColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Black,
         spotColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Black,
 ): Modifier = this // simplified for preview/compilation, or use actual shadow modifier
+
+@Composable
+fun DaySelectorItem(text: String, selected: Boolean, onClick: () -> Unit) {
+        Box(
+                modifier =
+                        Modifier.size(40.dp)
+                                .background(
+                                        color = if (selected) Primary else SurfaceDark,
+                                        shape = androidx.compose.foundation.shape.CircleShape
+                                )
+                                .border(
+                                        width = 1.dp,
+                                        color =
+                                                if (selected) Primary
+                                                else Color.White.copy(alpha = 0.1f),
+                                        shape = androidx.compose.foundation.shape.CircleShape
+                                )
+                                .clickable { onClick() },
+                contentAlignment = Alignment.Center
+        ) {
+                Text(
+                        text = text,
+                        fontSize = 14.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (selected) BackgroundDark else Color.White.copy(alpha = 0.6f)
+                )
+        }
+}

@@ -45,4 +45,10 @@ abstract class RepositoryModule {
         abstract fun bindAuthRepository(
                 authRepositoryImpl: com.devdiaz.gritia.data.repository.AuthRepositoryImpl
         ): com.devdiaz.gritia.data.repository.AuthRepository
+
+        @Binds
+        @Singleton
+        abstract fun bindExerciseRepository(
+                exerciseRepositoryImpl: com.devdiaz.gritia.data.repository.ExerciseRepositoryImpl
+        ): com.devdiaz.gritia.data.repository.ExerciseRepository
 }

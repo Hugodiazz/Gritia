@@ -34,7 +34,7 @@ import com.devdiaz.gritia.ui.theme.SurfaceDark
 @Composable
 fun HomeScreen(
         viewModel: HomeViewModel = hiltViewModel(),
-        onRoutineClick: () -> Unit = {},
+        onRoutineClick: (Long) -> Unit = {},
         onCreateRoutineClick: () -> Unit = {}
 ) {
         val routines by viewModel.routines.collectAsState()
@@ -49,7 +49,9 @@ fun HomeScreen(
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                                 items(routines) { routine ->
-                                        RoutineCard(routine) { onRoutineClick() }
+                                        RoutineCard(routine) {
+                                                onRoutineClick(routine.id)
+                                        } // Wait, onRoutineClick takes a Long, so pass routine.id
                                 }
                         }
                 }
