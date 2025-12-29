@@ -53,8 +53,12 @@ fun LoginScreen(
 
         // Handle authentication state changes
         LaunchedEffect(sessionStatus) {
+                Log.d("LoginScreen", "Session status observed: $sessionStatus")
                 if (sessionStatus is SessionStatus.Authenticated) {
+                        Log.d("LoginScreen", "Authenticated! Redirecting to main...")
                         onLoginSuccess()
+                } else {
+                        Log.d("LoginScreen", "Not authenticated, staying on LoginScreen.")
                 }
         }
 

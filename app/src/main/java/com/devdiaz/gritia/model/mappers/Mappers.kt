@@ -32,7 +32,8 @@ fun UserEntity.toDomain(): User {
                         }
                     },
             height = this.height,
-            currentWeight = this.currentWeight
+            currentWeight = this.currentWeight,
+            createdAt = this.createdAt
     )
 }
 
@@ -49,7 +50,8 @@ fun User.toEntity(): UserEntity {
                     },
             birthDate = this.birthDate?.toString(),
             height = this.height,
-            currentWeight = this.currentWeight
+            currentWeight = this.currentWeight,
+            createdAt = this.createdAt
     )
 }
 

@@ -9,7 +9,8 @@ data class User(
         val gender: Gender,
         val birthDate: LocalDate?,
         val height: Float?,
-        val currentWeight: Float?
+        val currentWeight: Float?,
+        val createdAt: Long = 0L
 )
 
 enum class Gender {

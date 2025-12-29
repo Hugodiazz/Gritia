@@ -9,6 +9,7 @@ interface AuthRepository {
 
     suspend fun signInWithGoogle(idToken: String, rawNonce: String? = null)
     suspend fun signOut()
+    suspend fun deleteAccount()
     fun isUserLoggedIn(): Boolean
 }
 

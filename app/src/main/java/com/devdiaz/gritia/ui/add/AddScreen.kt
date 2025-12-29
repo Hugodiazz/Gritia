@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -24,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.devdiaz.gritia.ui.theme.*
 
@@ -110,19 +110,24 @@ fun AddScreen(onNavigateBack: () -> Unit = {}, viewModel: AddViewModel = hiltVie
                                         .padding(innerPadding)
                                         .verticalScroll(rememberScrollState())
                 ) {
-                        DateSelector()
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         GeneralStatsSection(
                                 weight = uiState.weight,
+                                previousWeight = uiState.previousWeight,
                                 onWeightChange = viewModel::updateWeight,
                                 bodyFat = uiState.bodyFat,
-                                onBodyFatChange = viewModel::updateBodyFat
+                                previousBodyFat = uiState.previousBodyFat,
+                                isBodyFatManual = uiState.isBodyFatManual,
+                                onBodyFatChange = viewModel::updateBodyFat,
+                                onToggleBodyFatManual = viewModel::toggleBodyFatManual,
                         )
 
                         BodySection(
                                 title = "Upper Body",
                                 items = upperBodyItems,
                                 currentValues = uiState.measurements,
+                                previousValues = uiState.previousMeasurements,
                                 onValueChange = viewModel::updateMeasurement
                         )
 
@@ -130,6 +135,7 @@ fun AddScreen(onNavigateBack: () -> Unit = {}, viewModel: AddViewModel = hiltVie
                                 title = "Core & Legs",
                                 items = coreLegsItems,
                                 currentValues = uiState.measurements,
+                                previousValues = uiState.previousMeasurements,
                                 onValueChange = viewModel::updateMeasurement
                         )
                 }
@@ -138,113 +144,44 @@ fun AddScreen(onNavigateBack: () -> Unit = {}, viewModel: AddViewModel = hiltVie
 
 @Composable
 fun TopBar(onClose: () -> Unit) {
-        Row(
+        Column(
                 modifier =
                         Modifier.fillMaxWidth()
-                                .height(64.dp)
                                 .background(BackgroundDark.copy(alpha = 0.95f))
                                 .border(width = 1.dp, color = Color.White.copy(alpha = 0.05f))
-                                .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
         ) {
-                IconButton(
-                        onClick = onClose,
-                        modifier =
-                                Modifier.size(40.dp)
-                                        .background(Color.White.copy(alpha = 0.1f), CircleShape)
-                ) { Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White) }
-
-                Text(
-                        text = "Registrar Medidas",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextDark,
-                        fontWeight = FontWeight.Bold
-                )
-
-                IconButton(
-                        onClick = { /* TODO: History */},
-                        modifier =
-                                Modifier.size(40.dp)
-                                        .background(Primary.copy(alpha = 0.1f), CircleShape)
-                ) { Icon(Icons.Default.History, contentDescription = "History", tint = Primary) }
-        }
-}
-
-@Composable
-fun DateSelector() {
-        // Keeping static for now as requested task focused on connecting save logic
-        Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+                Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
                 Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                                Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                 ) {
                         IconButton(
-                                onClick = {},
+                                onClick = onClose,
                                 modifier =
                                         Modifier.size(40.dp)
-                                                .background(SurfaceDark, CircleShape)
-                                                .border(
-                                                        1.dp,
+                                                .background(
                                                         Color.White.copy(alpha = 0.1f),
                                                         CircleShape
                                                 )
                         ) {
                                 Icon(
-                                        Icons.Default.ChevronLeft,
-                                        contentDescription = "Previous",
-                                        tint = TextSecondaryLight
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back",
+                                        tint = Color.White
                                 )
                         }
 
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                        text = "FECHA DE REGISTRO",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Primary,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                                text = "Hoy", // Dynamic date would go here
-                                                style = MaterialTheme.typography.headlineSmall,
-                                                color = TextDark,
-                                                fontWeight = FontWeight.Bold
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Icon(
-                                                Icons.Default.CalendarMonth,
-                                                contentDescription = "Calendar",
-                                                tint = TextSecondaryLight,
-                                                modifier = Modifier.size(20.dp)
-                                        )
-                                }
-                        }
+                        Text(
+                                text = "Registrar Medidas",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextDark,
+                                fontWeight = FontWeight.Bold
+                        )
 
-                        IconButton(
-                                onClick = {},
-                                enabled = false,
-                                modifier =
-                                        Modifier.size(40.dp)
-                                                .background(SurfaceDark, CircleShape)
-                                                .border(
-                                                        1.dp,
-                                                        Color.White.copy(alpha = 0.1f),
-                                                        CircleShape
-                                                )
-                                                .alpha(0.5f)
-                        ) {
-                                Icon(
-                                        Icons.Default.ChevronRight,
-                                        contentDescription = "Next",
-                                        tint = TextSecondaryLight
-                                )
-                        }
+                        // Placeholder to balance the layout if needed, or just Spacer
+                        Spacer(modifier = Modifier.size(40.dp))
                 }
         }
 }
@@ -252,9 +189,13 @@ fun DateSelector() {
 @Composable
 fun GeneralStatsSection(
         weight: String,
+        previousWeight: String,
         onWeightChange: (String) -> Unit,
         bodyFat: String,
-        onBodyFatChange: (String) -> Unit
+        previousBodyFat: String,
+        isBodyFatManual: Boolean,
+        onBodyFatChange: (String) -> Unit,
+        onToggleBodyFatManual: (Boolean) -> Unit
 ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(
@@ -264,20 +205,28 @@ fun GeneralStatsSection(
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.height(IntrinsicSize.Max)
+                ) {
                         StatCard(
                                 label = "Peso",
                                 unit = "kg",
                                 value = weight,
+                                previousValue = previousWeight,
                                 onValueChange = onWeightChange,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                         StatCard(
                                 label = "% Grasa",
                                 unit = "%",
                                 value = bodyFat,
+                                previousValue = previousBodyFat,
                                 onValueChange = onBodyFatChange,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                                isBodyFat = true,
+                                isManual = isBodyFatManual,
+                                onToggleManual = onToggleBodyFatManual
                         )
                 }
         }
@@ -288,8 +237,12 @@ fun StatCard(
         label: String,
         unit: String,
         value: String,
+        previousValue: String = "",
         onValueChange: (String) -> Unit,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
+        isBodyFat: Boolean = false,
+        isManual: Boolean = true,
+        onToggleManual: ((Boolean) -> Unit)? = null
 ) {
         Column(
                 modifier =
@@ -299,47 +252,96 @@ fun StatCard(
                                         color = Color.White.copy(alpha = 0.1f),
                                         shape = RoundedCornerShape(16.dp)
                                 )
-                                .padding(16.dp)
+                                .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
         ) {
-                Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondaryLight,
-                        fontWeight = FontWeight.Medium
-                )
-                Row(verticalAlignment = Alignment.Bottom) {
-                        BasicTextField(
-                                value = value,
-                                onValueChange = onValueChange,
-                                textStyle =
-                                        MaterialTheme.typography.headlineMedium.copy(
-                                                color = TextDark,
-                                                fontWeight = FontWeight.Bold,
-                                                textAlign = TextAlign.Start
-                                        ),
-                                keyboardOptions =
-                                        KeyboardOptions(keyboardType = KeyboardType.Number),
-                                decorationBox = { innerTextField ->
-                                        if (value.isEmpty()) {
+                Column {
+                        Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                        ) {
+                                Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextSecondaryLight,
+                                        fontWeight = FontWeight.Medium
+                                )
+                                if (isBodyFat && onToggleManual != null) {
+                                        Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(start = 4.dp)
+                                        ) {
                                                 Text(
-                                                        text = "0.0",
-                                                        style =
-                                                                MaterialTheme.typography
-                                                                        .headlineMedium,
-                                                        color = Color.White.copy(alpha = 0.2f),
-                                                        fontWeight = FontWeight.Bold
+                                                        text = if (isManual) "MAN" else "AUTO",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color =
+                                                                if (isManual) Primary
+                                                                else TextSecondaryLight,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier = Modifier.padding(end = 4.dp)
+                                                )
+                                                Switch(
+                                                        checked = isManual,
+                                                        onCheckedChange = onToggleManual,
+                                                        modifier =
+                                                                Modifier.scale(0.6f).height(30.dp)
                                                 )
                                         }
-                                        innerTextField()
-                                },
-                                modifier = Modifier.weight(1f)
-                        )
+                                }
+                        }
+
+                        Row(verticalAlignment = Alignment.Bottom) {
+                                BasicTextField(
+                                        value = value,
+                                        onValueChange = onValueChange,
+                                        enabled = isManual,
+                                        textStyle =
+                                                MaterialTheme.typography.headlineMedium.copy(
+                                                        color =
+                                                                if (isManual) TextDark
+                                                                else TextDark.copy(alpha = 0.5f),
+                                                        fontWeight = FontWeight.Bold,
+                                                        textAlign = TextAlign.Start
+                                                ),
+                                        keyboardOptions =
+                                                KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        decorationBox = { innerTextField ->
+                                                Box(contentAlignment = Alignment.CenterStart) {
+                                                        if (value.isEmpty()) {
+                                                                Text(
+                                                                        text = "0.0",
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .headlineMedium,
+                                                                        color =
+                                                                                Color.White.copy(
+                                                                                        alpha = 0.2f
+                                                                                ),
+                                                                        fontWeight = FontWeight.Bold
+                                                                )
+                                                        }
+                                                        innerTextField()
+                                                }
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                        text = unit,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextSecondaryLight,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                        }
+                }
+                if (previousValue.isNotEmpty()) {
                         Text(
-                                text = unit,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondaryLight,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(bottom = 4.dp)
+                                text = "Prev: $previousValue",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextSecondaryLight.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(top = 4.dp)
                         )
                 }
         }
@@ -350,6 +352,7 @@ fun BodySection(
         title: String,
         items: List<BodyMeasurementUiItem>,
         currentValues: Map<MeasurementType, String>,
+        previousValues: Map<MeasurementType, String>,
         onValueChange: (MeasurementType, String) -> Unit
 ) {
         Column(modifier = Modifier.padding(top = 32.dp, start = 16.dp, end = 16.dp)) {
@@ -366,6 +369,7 @@ fun BodySection(
                                 MeasurementInputItem(
                                         item = item,
                                         value = currentValues[item.type] ?: "",
+                                        previousValue = previousValues[item.type] ?: "",
                                         onValueChange = { onValueChange(item.type, it) }
                                 )
                         }
@@ -377,6 +381,7 @@ fun BodySection(
 fun MeasurementInputItem(
         item: BodyMeasurementUiItem,
         value: String,
+        previousValue: String = "",
         onValueChange: (String) -> Unit
 ) {
         Row(
@@ -419,6 +424,13 @@ fun MeasurementInputItem(
                                 color = TextDark,
                                 fontWeight = FontWeight.Medium
                         )
+                        if (previousValue.isNotEmpty()) {
+                                Text(
+                                        text = "Prev: $previousValue ${item.unit}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TextSecondaryLight.copy(alpha = 0.7f)
+                                )
+                        }
                 }
 
                 // Input

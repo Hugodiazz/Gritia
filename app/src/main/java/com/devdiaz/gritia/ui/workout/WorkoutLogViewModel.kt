@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devdiaz.gritia.data.repository.RoutineRepository
+import com.devdiaz.gritia.data.repository.UserRepository
 import com.devdiaz.gritia.data.repository.WorkoutRepository
 import com.devdiaz.gritia.model.entities.ExercisePerformanceLogEntity
 import com.devdiaz.gritia.model.entities.WorkoutLogEntity
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -34,7 +36,8 @@ class WorkoutLogViewModel
 constructor(
         private val savedStateHandle: SavedStateHandle,
         private val routineRepository: RoutineRepository,
-        private val workoutRepository: WorkoutRepository
+        private val workoutRepository: WorkoutRepository,
+        private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val routineId: Long = checkNotNull(savedStateHandle["routineId"])
@@ -112,16 +115,6 @@ constructor(
     private fun finishWorkout() {
         stopWorkoutTimer()
         saveWorkout()
-        val totalVolume = calculateTotalVolume()
-        viewModelScope.launch {
-            _navigationEvent.emit(
-                    WorkoutNavigationEvent.NavigateToSummary(
-                            routineName = _uiState.value.routineName,
-                            durationSeconds = _uiState.value.elapsedTimeSeconds,
-                            totalVolume = totalVolume
-                    )
-            )
-        }
         _uiState.update { it.copy(isWorkoutActive = false) }
     }
 
@@ -259,20 +252,23 @@ constructor(
 
     private fun saveWorkout() {
         viewModelScope.launch {
+            val user = userRepository.getUser().firstOrNull() ?: return@launch
             val currentState = _uiState.value
+            val totalVolume = calculateTotalVolume()
+
             // Create WorkoutLog
             val log =
                     WorkoutLogEntity(
-                            userId = 1, // TODO: Get actual user ID (maybe from UserRepo or Prefs)
+                            userId = user.id,
                             routineNameSnapshot = currentState.routineName,
                             startTime =
                                     System.currentTimeMillis() -
                                             (currentState.elapsedTimeSeconds * 1000), // Approx
                             endTime = System.currentTimeMillis(),
                             userNotes = null,
-                            hoursActive = currentState.elapsedTimeSeconds / 3600f
-                            // totalVolume calculated inside or query
-                            )
+                            hoursActive = currentState.elapsedTimeSeconds / 3600f,
+                            totalVolume = totalVolume
+                    )
 
             // Create Performance Logs
             val performanceLogs = mutableListOf<ExercisePerformanceLogEntity>()
@@ -284,21 +280,7 @@ constructor(
                                         workoutLogId = 0, // Set by Repository/Dao
                                         exerciseNameSnapshot = exercise.name,
                                         muscleGroupSnapshot = exercise.muscleGroup,
-                                        setsCompleted =
-                                                1, // Accessing individual set, so 1 set record?
-                                        // Or should we aggregate? The entity suggests
-                                        // "sets_completed" which might mean aggregate.
-                                        // But usually logs are per set or per exercise.
-                                        // Looking at entity: "sets_completed", "reps_completed",
-                                        // "weight_used".
-                                        // If it's per set, sets_completed is redundant or always 1.
-                                        // Let's assume one row per set for granular history or one
-                                        // row per exercise?
-                                        // The current entity structure seems to imply one row per
-                                        // exercise if it has "sets_completed".
-                                        // But wait, "weight_used" is single value. If sets have
-                                        // different weights, we need multiple rows.
-                                        // SO let's assume one row per set.
+                                        setsCompleted = 1,
                                         repsCompleted = set.actualReps.toIntOrNull() ?: 0,
                                         weightUsed = set.actualWeight.toFloatOrNull() ?: 0f,
                                         restTimeUsed = exercise.restTimeSeconds
@@ -307,17 +289,6 @@ constructor(
                     }
                 }
             }
-
-            // Adjust entity usage:
-            // If the entity is designed to hold one record per SET, then `sets_completed` might be
-            // 1.
-            // If it holds one record per EXERCISE, how do we store multiple sets details?
-            // "sets_completed" is an Int. "reps_completed" is an Int. "weight_used" is Float.
-            // If I did 3 sets of 10x100, 10x100, 10x100.
-            // I could store 1 row: sets=3, reps=10, weight=100.
-            // But if I did 100x10, 105x8, 110x6?
-            // I'd need 3 rows.
-            // For now, I will create one row per completed set. `sets_completed` = 1.
 
             // Perform persist logic for logs
             workoutRepository.saveCompleteWorkout(log, performanceLogs)
@@ -330,6 +301,14 @@ constructor(
                         seconds = exercise.restTimeSeconds
                 )
             }
+
+            _navigationEvent.emit(
+                    WorkoutNavigationEvent.NavigateToSummary(
+                            routineName = _uiState.value.routineName,
+                            durationSeconds = _uiState.value.elapsedTimeSeconds,
+                            totalVolume = totalVolume
+                    )
+            )
         }
     }
 }

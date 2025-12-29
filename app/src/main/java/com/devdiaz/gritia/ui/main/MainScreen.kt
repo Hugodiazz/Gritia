@@ -33,7 +33,8 @@ fun MainScreen(
         onNavigateToAddMetric: () -> Unit = {},
         onNavigateToWorkout: (Long) -> Unit = {},
         onNavigateToHistory: () -> Unit = {},
-        onNavigateToCreateRoutine: () -> Unit = {}
+        onNavigateToCreateRoutine: () -> Unit = {},
+        onNavigateToLogin: () -> Unit = {}
 ) {
         var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
@@ -93,7 +94,7 @@ fun MainScreen(
                                                 onNavigateToAddProgress = onNavigateToAddMetric,
                                                 onNavigateToHistory = onNavigateToHistory
                                         )
-                                3 -> ProfileScreen()
+                                3 -> ProfileScreen(onLogout = onNavigateToLogin)
                         }
                 }
         }

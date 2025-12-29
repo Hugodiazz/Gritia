@@ -124,48 +124,83 @@ constructor(
                                                 it.timestamp
                                             }
 
-                                    // 3. Calculate Stats
-                                    val latestMetric = metrics.maxByOrNull { it.recordedAt }
-                                    val currentWeight = latestMetric?.weight?.toString() ?: "--"
 
-                                    // Calculate Change (simplification: compare last 2 weights)
-                                    val sortedWeights = metrics.sortedByDescending { it.recordedAt }
-                                    val weightChange =
-                                            if (sortedWeights.size >= 2) {
-                                                val current = sortedWeights[0].weight
-                                                val prev = sortedWeights[1].weight
-                                                val diff = current - prev
-                                                val percent = (diff / prev) * 100
-                                                val sign = if (diff > 0) "+" else ""
-                                                "$sign${"%.1f".format(percent)}%"
-                                            } else {
-                                                "0%"
-                                            }
-                                    val isTrendingDown =
-                                            (sortedWeights.size >= 2 &&
-                                                    sortedWeights[0].weight <
-                                                            sortedWeights[1].weight)
 
                                     // 4. Chart Data
                                     // Filter by range logic here (omitted for brevity, showing all
                                     // for now)
-                                    val chartData =
-                                            sortedWeights.take(10).reversed().map { it.weight }
-                                    val chartLabels =
-                                            sortedWeights.take(10).reversed().map {
-                                                formatDateShort(it.recordedAt)
-                                            }
+                                    // 4. Chart Data
+                                    val cutoff = when (range) {
+                                        TimeRange.ONE_MONTH -> Instant.now().minus(30, java.time.temporal.ChronoUnit.DAYS).toEpochMilli()
+                                        TimeRange.THREE_MONTHS -> Instant.now().minus(90, java.time.temporal.ChronoUnit.DAYS).toEpochMilli()
+                                        TimeRange.SIX_MONTHS -> Instant.now().minus(180, java.time.temporal.ChronoUnit.DAYS).toEpochMilli()
+                                        TimeRange.ONE_YEAR -> Instant.now().minus(365, java.time.temporal.ChronoUnit.DAYS).toEpochMilli()
+                                        TimeRange.ALL -> 0L
+                                    }
+
+                                    // Helper to extract value and time for generic handling
+                                    data class ChartPoint(val value: Float, val time: Long)
+
+                                    val rawPoints = when (selectedMetric) {
+                                        // User Metrics
+                                        MetricType.WEIGHT -> metrics.map { ChartPoint(it.weight, it.recordedAt) }
+                                        MetricType.BODY_FAT -> metrics.mapNotNull { it.bodyFatPercentage?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.IMC -> metrics.mapNotNull { it.bmi?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        
+                                        // Body Measurements (Tapes)
+                                        MetricType.NECK -> measurements.mapNotNull { it.neck?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.CHEST -> measurements.mapNotNull { it.chest?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.ARM -> measurements.mapNotNull { it.arm?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.FOREARM -> measurements.mapNotNull { it.forearm?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.WAIST -> measurements.mapNotNull { it.waist?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.HIP -> measurements.mapNotNull { it.hip?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.LEG -> measurements.mapNotNull { it.leg?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                        MetricType.CALF -> measurements.mapNotNull { it.calf?.let { v -> ChartPoint(v, it.recordedAt) } }
+                                    }.filter { it.time >= cutoff }
+
+                                    // Group by day and take latest
+                                    val dailyPoints = rawPoints
+                                        .groupBy { 
+                                            Instant.ofEpochMilli(it.time)
+                                                .atZone(ZoneId.systemDefault())
+                                                .toLocalDate()
+                                        }
+                                        .mapValues { (_, points) ->
+                                            points.maxByOrNull { it.time }!!
+                                        }
+                                        .values
+                                        .sortedBy { it.time }
+
+                                    val chartData = dailyPoints.map { it.value }
+                                    val chartLabels = dailyPoints.map { formatDateShort(it.time) }
+
+                                    // 5. Current Value & Trend for Selected Metric
+                                    // We can reuse 'dailyPoints' which is already sorted by time
+                                    val currentVal = dailyPoints.lastOrNull()?.value
+                                    val previousVal = if (dailyPoints.size > 1) dailyPoints[dailyPoints.size - 2].value else null
+                                    
+                                    val currentValueStr = currentVal?.toString() ?: "--"
+                                    
+                                    val (changeStr, isTrendingDown) = if (currentVal != null && previousVal != null) {
+                                        val diff = currentVal - previousVal
+                                        val absDiff = kotlin.math.abs(diff)
+                                        val formatted = String.format("%.1f", absDiff)
+                                        val trend = diff < 0
+                                        formatted to trend
+                                    } else {
+                                        "--" to false
+                                    }
 
                                     BodyMetricsUiState(
                                             selectedTimeRange = range,
                                             selectedMetric = selectedMetric,
-                                            currentWeight = currentWeight,
-                                            weightChange = weightChange,
-                                            isWeightTrendingDown = isTrendingDown,
+                                            currentValue = currentValueStr,
+                                            valueChange = changeStr,
+                                            isValueTrendingDown = isTrendingDown,
                                             chartData = chartData,
                                             chartLabels = chartLabels,
                                             recentMeasurements =
-                                                    allItems.take(5) // Show top 5 recent mixed
+                                                    allItems.take(5)
                                     )
                                 }
                             }
@@ -213,19 +248,20 @@ constructor(
 data class BodyMetricsUiState(
         val selectedTimeRange: TimeRange = TimeRange.ONE_MONTH,
         val selectedMetric: MetricType = MetricType.WEIGHT,
-        val currentWeight: String = "--",
-        val weightChange: String = "--",
-        val isWeightTrendingDown: Boolean = false,
+        val currentValue: String = "--",
+        val valueChange: String = "--",
+        val isValueTrendingDown: Boolean = false,
         val chartData: List<Float> = emptyList(),
         val chartLabels: List<String> = emptyList(),
         val recentMeasurements: List<MeasurementItem> = emptyList()
 )
 
 enum class TimeRange(val label: String) {
-    ONE_WEEK("1S"),
     ONE_MONTH("1M"),
     THREE_MONTHS("3M"),
-    ONE_YEAR("1A")
+    SIX_MONTHS("6M"),
+    ONE_YEAR("1Y"),
+    ALL("Todo")
 }
 
 enum class MetricType(val label: String) {

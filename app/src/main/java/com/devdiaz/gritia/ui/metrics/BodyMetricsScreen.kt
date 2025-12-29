@@ -24,11 +24,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.TrendingDown
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.outlined.AccessibilityNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -279,14 +281,21 @@ fun ChartSection(
                         Column {
                                 Row(verticalAlignment = Alignment.Bottom) {
                                         Text(
-                                                text = state.currentWeight,
+                                                text = state.currentValue,
                                                 fontSize = 36.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = textPrimary
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
+                                        
+                                        val unit = when(state.selectedMetric) {
+                                            MetricType.WEIGHT -> "kg"
+                                            MetricType.BODY_FAT -> "%"
+                                            else -> "cm" // Default for tapes
+                                        }
+                                        
                                         Text(
-                                                text = "kg",
+                                                text = unit,
                                                 fontSize = 20.sp,
                                                 color = textSecondary,
                                                 modifier = Modifier.padding(bottom = 6.dp)
@@ -295,10 +304,27 @@ fun ChartSection(
                         }
 
                         // Trend Badge
-                        val badgeBg =
-                                if (isDark) Color(0xFF14532D).copy(alpha = 0.4f)
-                                else Color(0xFFDCFCE7)
-                        val badgeContent = if (isDark) Primary else Color(0xFF15803D)
+                        val isTrendingDown = state.isValueTrendingDown
+                        // Logic: For weight and fat, down is usually "good" (green).
+                        // For muscle groups (biceps, chest), up might be "good".
+                        // For now, let's keep simple color coding:
+                        // Green if trending down (loss) for weight/fat/waist?
+                        // Or just standard: Green = Positive Change, Red = Negative?
+                        // The user said "trend badge". Let's assume standard behavior:
+                        // Improvement = Green.
+                        
+                        // Heuristic:
+                        // Weight/Fat/Waist/Hips: Down = Good (Green)
+                        // Biceps/Chest/etc: Up = Good (Green)
+                        
+                        val isImprovement = when(state.selectedMetric) {
+                             MetricType.WEIGHT, MetricType.BODY_FAT, MetricType.WAIST, MetricType.HIP, MetricType.IMC -> isTrendingDown
+                             else -> !isTrendingDown // Muscle gain is good
+                        }
+                        
+                        val badgeColor = if (isImprovement) Color(0xFF22C55E) else Color(0xFFEF4444)
+                        val badgeBg = badgeColor.copy(alpha = 0.15f)
+
                         Row(
                                 modifier =
                                         Modifier.background(badgeBg, RoundedCornerShape(8.dp))
@@ -306,15 +332,15 @@ fun ChartSection(
                                 verticalAlignment = Alignment.CenterVertically
                         ) {
                                 Icon(
-                                        imageVector = Icons.Default.TrendingDown,
+                                        imageVector = if (isTrendingDown) Icons.Default.TrendingDown else Icons.Default.TrendingUp, // We might need TrendingUp icon
                                         contentDescription = null,
-                                        tint = badgeContent,
+                                        tint = badgeColor,
                                         modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(2.dp))
                                 Text(
-                                        text = state.weightChange,
-                                        color = badgeContent,
+                                        text = state.valueChange,
+                                        color = badgeColor,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold
                                 )

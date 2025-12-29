@@ -36,12 +36,62 @@ constructor(
     private val _saveSuccess = Channel<Unit>()
     val saveSuccess = _saveSuccess.receiveAsFlow()
 
+    init {
+        loadData()
+    }
+
+    private fun loadData() {
+        viewModelScope.launch {
+            val user = userRepository.getUser().firstOrNull() ?: return@launch
+            val timestamp = System.currentTimeMillis()
+            // Identify "start of today" to define what "previous" means (strictly before today)
+            val zoneId = java.time.ZoneId.systemDefault()
+            val now = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId)
+            val startOfDay = now.toLocalDate().atStartOfDay(zoneId).toInstant().toEpochMilli()
+
+            // Fetch previous records (strictly before start of today)
+            val prevMetric = bodyMetricsRepository.getLatestMetricBeforeDate(user.id, startOfDay)
+            val prevMsmt = bodyMetricsRepository.getLatestMeasurementBeforeDate(user.id, startOfDay)
+
+            // Map safe previous values
+            val prevMeasurements = mutableMapOf<MeasurementType, String>()
+            prevMsmt?.let {
+                it.neck?.let { v -> prevMeasurements[MeasurementType.NECK] = v.toString() }
+                it.chest?.let { v -> prevMeasurements[MeasurementType.CHEST] = v.toString() }
+                it.arm?.let { v -> prevMeasurements[MeasurementType.BICEP] = v.toString() }
+                it.forearm?.let { v -> prevMeasurements[MeasurementType.FOREARM] = v.toString() }
+                it.waist?.let { v -> prevMeasurements[MeasurementType.WAIST] = v.toString() }
+                it.hip?.let { v -> prevMeasurements[MeasurementType.HIP] = v.toString() }
+                it.leg?.let { v -> prevMeasurements[MeasurementType.QUAD] = v.toString() }
+                it.calf?.let { v -> prevMeasurements[MeasurementType.CALF] = v.toString() }
+            }
+
+            _uiState.update {
+                it.copy(
+                        previousWeight = prevMetric?.weight?.toString() ?: "",
+                        previousBodyFat = prevMetric?.bodyFatPercentage?.toString() ?: "",
+                        previousMeasurements = prevMeasurements
+                )
+            }
+        }
+    }
+
     fun updateWeight(value: String) {
         _uiState.update { it.copy(weight = value) }
+        calculateBodyFatIfAuto()
     }
 
     fun updateBodyFat(value: String) {
-        _uiState.update { it.copy(bodyFat = value) }
+        if (_uiState.value.isBodyFatManual) {
+            _uiState.update { it.copy(bodyFat = value) }
+        }
+    }
+
+    fun toggleBodyFatManual(isManual: Boolean) {
+        _uiState.update { it.copy(isBodyFatManual = isManual) }
+        if (!isManual) {
+            calculateBodyFatIfAuto()
+        }
     }
 
     fun updateMeasurement(type: MeasurementType, value: String) {
@@ -49,6 +99,38 @@ constructor(
             val newMeasurements = currentState.measurements.toMutableMap()
             newMeasurements[type] = value
             currentState.copy(measurements = newMeasurements)
+        }
+        calculateBodyFatIfAuto()
+    }
+
+    private fun calculateBodyFatIfAuto() {
+        if (_uiState.value.isBodyFatManual) return
+
+        viewModelScope.launch {
+            val user = userRepository.getUser().firstOrNull() ?: return@launch
+            val state = _uiState.value
+
+            if (user.height != null && user.gender != null) {
+                // Need Waist and Neck (and Hip for female)
+                // Need to use CURRENT input if available, else fallback to... previous? No,
+                // strictly input for calc.
+                val waistStr = state.measurements[MeasurementType.WAIST]
+                val neckStr = state.measurements[MeasurementType.NECK]
+                val hipStr = state.measurements[MeasurementType.HIP]
+
+                val waist = waistStr?.toFloatOrNull()
+                val neck = neckStr?.toFloatOrNull()
+                val hip = hipStr?.toFloatOrNull()
+
+                var calcFat: Float? = null
+                if (waist != null && neck != null) {
+                    calcFat = calculateBodyFat(user.gender, waist, neck, hip, user.height)
+                }
+
+                if (calcFat != null) {
+                    _uiState.update { it.copy(bodyFat = "%.1f".format(calcFat)) }
+                }
+            }
         }
     }
 
@@ -66,33 +148,21 @@ constructor(
                     now.toLocalDate().plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() -
                             1
 
-            // 1. Check for existing records
+            // 1. Check for existing records TODAY
             val existingMetric =
                     bodyMetricsRepository.getMetricOnDate(user.id, startOfDay, endOfDay)
             val existingMeasurement =
                     bodyMetricsRepository.getMeasurementOnDate(user.id, startOfDay, endOfDay)
 
-            // Calculate BMI and Body Fat
+            // Calculate BMI
             var calculatedBmi: Float? = null
-            var calculatedBodyFat: Float? = null
-
             val weightVal = state.weight.toFloatOrNull()
             if (weightVal != null && user.height != null && user.height > 0) {
                 calculatedBmi = calculateBmi(weightVal, user.height)
             }
 
-            if (user.height != null && user.gender != null) {
-                val waist = state.measurements[MeasurementType.WAIST]?.toFloatOrNull()
-                val neck = state.measurements[MeasurementType.NECK]?.toFloatOrNull()
-                val hip = state.measurements[MeasurementType.HIP]?.toFloatOrNull()
-
-                if (waist != null && neck != null) {
-                    calculatedBodyFat = calculateBodyFat(user.gender, waist, neck, hip, user.height)
-                }
-            }
-
-            // Prefer manual input if available, else use calculated
-            val finalBodyFat = state.bodyFat.toFloatOrNull() ?: calculatedBodyFat
+            // Determine Body Fat to Save
+            val finalBodyFat = state.bodyFat.toFloatOrNull()
 
             Log.d(
                     "AddViewModel",
@@ -100,24 +170,40 @@ constructor(
             )
 
             // 2. Save Metrics (Weight, Fat) - Update or Insert
-            if (weightVal != null) {
-                val metric =
-                        UserMetricEntity(
-                                id = existingMetric?.id ?: 0, // Use existing ID if found
-                                userId = user.id,
-                                measurementId = null,
-                                weight = weightVal,
-                                bodyFatPercentage = finalBodyFat,
-                                bmi = calculatedBmi,
-                                recordedAt = existingMetric?.recordedAt
-                                                ?: timestamp // Keep original timestamp if updating?
-                                // Or update time? Let's update time.
-                                )
-                // If updating time, use timestamp. If we want to keep "first entry of day" time,
-                // use existing.
-                // Requirement is "update recent record", usually implies correcting today's entry.
-                // Updating time is safer.
-                bodyMetricsRepository.addMetric(metric.copy(recordedAt = timestamp))
+            if (weightVal != null || finalBodyFat != null) {
+                // Even if weight is null but fat is set? Usually weight is required for a metric
+                // entry.
+                // If weight is missing but user entered body fat manually... we might need to fetch
+                // latest weight?
+                // For now, let's assume weight is entered or we update existing today.
+
+                val metricToSave =
+                        if (existingMetric != null) {
+                            existingMetric.copy(
+                                    weight = weightVal ?: existingMetric.weight,
+                                    bodyFatPercentage = finalBodyFat
+                                                    ?: existingMetric.bodyFatPercentage,
+                                    bmi = calculatedBmi ?: existingMetric.bmi,
+                                    recordedAt = timestamp
+                            )
+                        } else {
+                            if (weightVal == null)
+                                    return@launch // Cannot create new metric without weight
+                            // typically? Or allow null weight? entity
+                            // probably requires it or allows null. Exisiting
+                            // code required weightVal != null
+
+                            UserMetricEntity(
+                                    id = 0,
+                                    userId = user.id,
+                                    measurementId = null,
+                                    weight = weightVal,
+                                    bodyFatPercentage = finalBodyFat,
+                                    bmi = calculatedBmi,
+                                    recordedAt = timestamp
+                            )
+                        }
+                bodyMetricsRepository.addMetric(metricToSave)
             }
 
             // 3. Save Body Measurements - Update or Insert
@@ -188,7 +274,7 @@ constructor(
                 null
             }
         } catch (e: Exception) {
-            Log.d( "AddViewModel", "Error calculating body fat: ${e.message}" )
+            Log.d("AddViewModel", "Error calculating body fat: ${e.message}")
             null
         }
     }
@@ -197,7 +283,11 @@ constructor(
 data class AddUiState(
         val weight: String = "",
         val bodyFat: String = "",
-        val measurements: Map<MeasurementType, String> = emptyMap()
+        val isBodyFatManual: Boolean = false,
+        val previousWeight: String = "",
+        val previousBodyFat: String = "",
+        val measurements: Map<MeasurementType, String> = emptyMap(),
+        val previousMeasurements: Map<MeasurementType, String> = emptyMap()
 )
 
 enum class MeasurementType {

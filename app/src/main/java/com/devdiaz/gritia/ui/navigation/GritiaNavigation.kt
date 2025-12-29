@@ -29,7 +29,10 @@ fun GritiaNavigation() {
                         navController.navigate("workout_log/$routineId")
                     },
                     onNavigateToHistory = { navController.navigate("measurement_history") },
-                    onNavigateToCreateRoutine = { navController.navigate("create_routine") }
+                    onNavigateToCreateRoutine = { navController.navigate("create_routine") },
+                    onNavigateToLogin = {
+                        navController.navigate("login") { popUpTo("main") { inclusive = true } }
+                    }
             )
         }
         composable("add_metric") {
