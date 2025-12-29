@@ -4,12 +4,6 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,9 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
@@ -39,14 +30,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
         onLoginSuccess: () -> Unit,
-        viewModel: AuthViewModel = hiltViewModel() // Use AuthViewModel
+        viewModel: AuthViewModel = hiltViewModel()
 ) {
-        // We can keep local state for email/password if we want to preserve the UI fields
-        // even if they don't do Supabase auth yet (or we can wire them later).
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var passwordVisible by remember { mutableStateOf(false) }
-
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val sessionStatus by viewModel.sessionStatus.collectAsState()
@@ -108,8 +93,6 @@ fun LoginScreen(
                                         text = "Alcanza tus metas con Gritia",
                                         style =
                                                 MaterialTheme.typography.bodyMedium.copy(
-                                                        // simple fallback if TextSecondaryLight
-                                                        // undefined
                                                         color =
                                                                 MaterialTheme.colorScheme
                                                                         .onSurfaceVariant
@@ -124,126 +107,18 @@ fun LoginScreen(
                                 Modifier.fillMaxSize()
                                         .padding(top = 300.dp)
                                         .padding(horizontal = 24.dp, vertical = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                        // Email Input
-                        OutlinedTextField(
-                                value = email,
-                                onValueChange = { email = it },
-                                placeholder = { Text("Email") },
-                                leadingIcon = {
-                                        Icon(
-                                                Icons.Default.Email,
-                                                contentDescription = null,
-                                                tint = Color.Gray
-                                        )
-                                },
-                                shape = RoundedCornerShape(28.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                                colors =
-                                        OutlinedTextFieldDefaults.colors(
-                                                unfocusedContainerColor =
-                                                        MaterialTheme.colorScheme.surface,
-                                                focusedContainerColor =
-                                                        MaterialTheme.colorScheme.surface,
-                                                unfocusedBorderColor =
-                                                        MaterialTheme.colorScheme.outline.copy(
-                                                                alpha = 0.1f
-                                                        ),
-                                                focusedBorderColor =
-                                                        MaterialTheme.colorScheme.primary
-                                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Text(
+                                text = "Inicia sesión para continuar",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        // Password Input
-                        OutlinedTextField(
-                                value = password,
-                                onValueChange = { password = it },
-                                placeholder = { Text("Contraseña") },
-                                leadingIcon = {
-                                        Icon(
-                                                Icons.Default.Lock,
-                                                contentDescription = null,
-                                                tint = Color.Gray
-                                        )
-                                },
-                                trailingIcon = {
-                                        IconButton(
-                                                onClick = { passwordVisible = !passwordVisible }
-                                        ) {
-                                                Icon(
-                                                        if (passwordVisible)
-                                                                Icons.Default.Visibility
-                                                        else Icons.Default.VisibilityOff,
-                                                        contentDescription = null,
-                                                        tint = Color.Gray
-                                                )
-                                        }
-                                },
-                                visualTransformation =
-                                        if (passwordVisible) VisualTransformation.None
-                                        else PasswordVisualTransformation(),
-                                keyboardOptions =
-                                        KeyboardOptions(keyboardType = KeyboardType.Password),
-                                shape = RoundedCornerShape(28.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                                colors =
-                                        OutlinedTextFieldDefaults.colors(
-                                                unfocusedContainerColor =
-                                                        MaterialTheme.colorScheme.surface,
-                                                focusedContainerColor =
-                                                        MaterialTheme.colorScheme.surface,
-                                                unfocusedBorderColor =
-                                                        MaterialTheme.colorScheme.outline.copy(
-                                                                alpha = 0.1f
-                                                        ),
-                                                focusedBorderColor =
-                                                        MaterialTheme.colorScheme.primary
-                                        )
-                        )
-
-                        // Forgot Password
-                        Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.CenterEnd
-                        ) {
-                                TextButton(onClick = { /* TODO */}) {
-                                        Text(
-                                                "Olvidaste tu contraseña?",
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Medium
-                                        )
-                                }
-                        }
-
-                        // Login Button
-                        Button(
-                                onClick = { /* TODO: Implement email/password login via AuthViewModel if desired */
-                                },
-                                modifier = Modifier.fillMaxWidth().height(56.dp),
-                                colors =
-                                        ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.primary,
-                                                contentColor = Color(0xFF111814)
-                                        ),
-                                shape = RoundedCornerShape(28.dp)
-                        ) { Text("Iniciar sesión", fontWeight = FontWeight.Bold, fontSize = 16.sp) }
-
-                        // Divider
-                        Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(vertical = 16.dp)
-                        ) {
-                                HorizontalDivider(modifier = Modifier.weight(1f))
-                                Text(
-                                        "O continúa con",
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.Gray
-                                )
-                                HorizontalDivider(modifier = Modifier.weight(1f))
-                        }
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         // Social Buttons (Google)
                         OutlinedButton(
@@ -255,7 +130,6 @@ fun LoginScreen(
                                                 containerColor = MaterialTheme.colorScheme.surface,
                                                 contentColor = MaterialTheme.colorScheme.onSurface
                                         ),
-                                border = null
                         ) {
                                 if (sessionStatus is SessionStatus.Loading) {
                                         CircularProgressIndicator(
@@ -268,29 +142,12 @@ fun LoginScreen(
                         }
 
                         if (sessionStatus is SessionStatus.Error) {
+                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
                                         text = (sessionStatus as SessionStatus.Error).message,
                                         color = MaterialTheme.colorScheme.error,
                                         style = MaterialTheme.typography.bodySmall,
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
                                 )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Footer
-                        Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                                Row {
-                                        Text("No tienes una cuenta? ", color = Color.Gray)
-                                        Text(
-                                                "Registrate",
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.Bold
-                                        )
-                                }
                         }
                 }
         }
@@ -299,8 +156,6 @@ fun LoginScreen(
 private suspend fun signInWithGoogle(context: android.content.Context, viewModel: AuthViewModel) {
         try {
                 val credentialManager = CredentialManager.create(context)
-
-                // Generate a random nonce
                 val rawNonce = java.util.UUID.randomUUID().toString()
                 val bytes = rawNonce.toByteArray()
                 val md = java.security.MessageDigest.getInstance("SHA-256")
@@ -322,15 +177,12 @@ private suspend fun signInWithGoogle(context: android.content.Context, viewModel
                 val credential = result.credential
                 if (credential is GoogleIdTokenCredential) {
                         val googleIdToken = credential.idToken
-                        // Pass the raw nonce we generated, so Supabase can verify the ID token's
-                        // nonce claim
                         viewModel.signInWithGoogle(googleIdToken, rawNonce)
                 } else {
                         Log.e("LoginScreen", "Unexpected credential type")
                 }
         } catch (e: androidx.credentials.exceptions.GetCredentialCancellationException) {
                 Log.d("LoginScreen", "Sign in cancelled by user")
-                // Do nothing or show a simple message
         } catch (e: GetCredentialException) {
                 Log.e("LoginScreen", "GetCredentialException", e)
                 android.widget.Toast.makeText(
