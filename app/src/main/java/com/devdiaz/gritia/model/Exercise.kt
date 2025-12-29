@@ -1,6 +1,10 @@
 package com.devdiaz.gritia.model
 
-enum class MuscleGroup(val displayName: String) {
+import kotlinx.parcelize.Parcelize
+import android.os.Parcelable
+
+@Parcelize
+enum class MuscleGroup(val displayName: String) : Parcelable {
     ALL("Todos"),
     CHEST("Pecho"),
     BACK("Espalda"),
@@ -8,10 +12,10 @@ enum class MuscleGroup(val displayName: String) {
     ARMS("Brazos"),
     SHOULDERS("Hombros"),
     CORE("Core")
-
 }
 
-enum class Equipment(val displayName: String) {
+@Parcelize
+enum class Equipment(val displayName: String) : Parcelable {
     DUMBBELL("Mancuernas"),
     BARBELL("Barra"),
     MACHINE("Máquina"),
@@ -19,10 +23,11 @@ enum class Equipment(val displayName: String) {
     CABLE("Cable")
 }
 
+@Parcelize
 data class Exercise(
         val id: String,
         val name: String,
         val muscleGroup: MuscleGroup,
         val equipment: Equipment,
         val imageUrl: String
-)
+) : Parcelable

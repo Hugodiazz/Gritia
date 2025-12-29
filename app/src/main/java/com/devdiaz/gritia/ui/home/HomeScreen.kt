@@ -1,5 +1,6 @@
 package com.devdiaz.gritia.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,23 +13,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.devdiaz.gritia.model.Routine
 import com.devdiaz.gritia.ui.library.TopBar
 import com.devdiaz.gritia.ui.theme.BackgroundDark
@@ -36,9 +32,12 @@ import com.devdiaz.gritia.ui.theme.Primary
 import com.devdiaz.gritia.ui.theme.SurfaceDark
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), onRoutineClick: () -> Unit = {}) {
+fun HomeScreen(
+        viewModel: HomeViewModel = hiltViewModel(),
+        onRoutineClick: (Long) -> Unit = {},
+        onCreateRoutineClick: () -> Unit = {}
+) {
         val routines by viewModel.routines.collectAsState()
-        val context = LocalContext.current
 
         Box(modifier = Modifier.fillMaxSize().background(BackgroundDark)) {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -50,7 +49,9 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), onRoutineClick: () ->
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                                 items(routines) { routine ->
-                                        RoutineCard(routine) { onRoutineClick() }
+                                        RoutineCard(routine) {
+                                                onRoutineClick(routine.id)
+                                        } // Wait, onRoutineClick takes a Long, so pass routine.id
                                 }
                         }
                 }
@@ -74,7 +75,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), onRoutineClick: () ->
 
                 // FAB
                 FloatingActionButton(
-                        onClick = { /* TODO */},
+                        onClick = onCreateRoutineClick,
                         containerColor = Primary,
                         contentColor = Color.Black,
                         elevation = FloatingActionButtonDefaults.elevation(8.dp),
@@ -97,60 +98,16 @@ fun RoutineCard(routine: Routine, onClick: () -> Unit) {
         Card(
                 modifier =
                         Modifier.fillMaxWidth()
-                                .height(140.dp) // Adjusted height
+                                .height(120.dp) // Adjusted height
                                 .clickable(onClick = onClick),
                 shape = RoundedCornerShape(24.dp), // Approx 2rem
                 colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                border =
-                        androidx.compose.foundation.BorderStroke(
-                                1.dp,
-                                Color.White.copy(alpha = 0.05f)
-                        )
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
         ) {
                 Row(
-                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                 ) {
-                        // Image
-                        Box(
-                                modifier =
-                                        Modifier.size(96.dp)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(
-                                                        Color.White.copy(alpha = 0.05f)
-                                                ), // Fallback or container
-                                contentAlignment = Alignment.Center
-                        ) {
-                                if (routine.imageUrl.isNotEmpty()) {
-                                        AsyncImage(
-                                                model = routine.imageUrl,
-                                                contentDescription = null,
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier.fillMaxSize()
-                                        )
-                                        // Dark overlay on image
-                                        Box(
-                                                modifier =
-                                                        Modifier.fillMaxSize()
-                                                                .background(
-                                                                        Color.Black.copy(
-                                                                                alpha = 0.3f
-                                                                        )
-                                                                )
-                                        )
-                                } else {
-                                        // Fallback icon for Cardio
-                                        Icon(
-                                                imageVector = Icons.Outlined.FitnessCenter,
-                                                contentDescription = null,
-                                                tint = Color.White.copy(alpha = 0.4f),
-                                                modifier = Modifier.size(40.dp)
-                                        )
-                                }
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
                         // Info
                         Column(modifier = Modifier.weight(1f)) {
                                 Text(
@@ -182,7 +139,7 @@ fun RoutineCard(routine: Routine, onClick: () -> Unit) {
 
                         // Play Button
                         IconButton(
-                                onClick = { /* Start Routine */},
+                                onClick = { onClick() },
                                 modifier =
                                         Modifier.size(40.dp)
                                                 .background(

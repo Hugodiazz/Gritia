@@ -6,7 +6,7 @@ data class Measurement(
         val id: String,
         val type: MeasurementType,
         val value: Float,
-        val unit: String = "in",
+        val unit: String = "cm",
         val date: LocalDate,
         val previousValue: Float? = null
 ) {
@@ -15,11 +15,15 @@ data class Measurement(
 }
 
 enum class MeasurementType(val displayName: String) {
-    Weight("Weight"),
+    Weight("Peso"),
+    BMI("IMC"),
+    BodyFat("% Grasa"),
+    Neck("Cuello"),
+    Chest("Pecho"),
     Biceps("Biceps"),
-    Waist("Waist"),
-    Chest("Chest"),
-    Thighs("Thighs"),
-    Hips("Hips"),
-    Neck("Neck")
+    Forearm("Antebrazo"),
+    Waist("Cintura"),
+    Hips("Cadera"),
+    Legs("Piernas"),
+    Calves("Pantorrillas")
 }
